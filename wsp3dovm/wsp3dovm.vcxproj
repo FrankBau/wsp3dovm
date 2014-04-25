@@ -161,6 +161,7 @@
     <ClCompile Include="create_steinerpoints.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="read_tet.cpp" />
+    <ClCompile Include="statistics.cpp" />
     <ClCompile Include="write_vtk.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -168,6 +169,7 @@
     <ClInclude Include="create_steinerpoints.h" />
     <ClInclude Include="MeshGenerator.hpp" />
     <ClInclude Include="read_tet.h" />
+    <ClInclude Include="statistics.h" />
     <ClInclude Include="write_vtk.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
