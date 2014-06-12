@@ -95,7 +95,15 @@ void write_shortest_path_max_vtk
 			max_distance = distances[i];
 		}
 	}
-	std::cout << "s = " << graph[s].cell.idx() << "; t = " << graph[t].cell.idx() << std::endl;
+	
+	int h = hops(predecessors, t);
+
+	std::cout 
+	<< "longest distance from s = " << graph[s].cell.idx() 
+	<< " has t = " << graph[t].cell.idx() 
+	<< " distance = " << max_distance 
+	<< " #hops = " << h 
+	<< std::endl;
 
 	std::ofstream file(filename, std::ios::trunc);
 	if (!file.is_open())
@@ -122,8 +130,6 @@ void write_shortest_path_max_vtk
 		id[u] = i++;
 		file << graph[u].point << "\n";
 	}
-
-	int h = hops(predecessors, t);
 
 	file << "CELLS " << h << " " << 3 * h << "\n";
 	for (GraphNode_descriptor r = t; r != s; r = predecessors[r])

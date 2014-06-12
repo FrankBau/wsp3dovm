@@ -98,7 +98,8 @@ double tetrahedral_volume(Point& a, Point& b, Point& c, Point& d )
 		- c[0] * b[1] * a[2]
 		- b[0] * a[1] * c[2]
 		- a[0] * c[1] * b[2];
-	return abs(det / 6.0);
+
+	return fabs(det / 6.0);
 }
 
 double tetrahedral_volume(Mesh &mesh, CellHandle ch)
@@ -110,13 +111,15 @@ double tetrahedral_volume(Mesh &mesh, CellHandle ch)
 	Point p4 = mesh.vertex(*v_it); ++v_it;
 	assert(!v_it); // tetrahedron
 
-	return tetrahedral_volume(p1, p2, p3, p4);
+	double volume =  tetrahedral_volume(p1, p2, p3, p4);
+
+	return volume;
 }
 
 void print_volume_statistics(Mesh &mesh)
 {
 	double min_volume = std::numeric_limits<double>::max();
-	double max_volume = 0;
+	double max_volume = std::numeric_limits<double>::min();
 
 	CellHandle min_ch = Kernel::InvalidCellHandle;
 	CellHandle max_ch = Kernel::InvalidCellHandle;
@@ -126,7 +129,7 @@ void print_volume_statistics(Mesh &mesh)
 		CellHandle ch = *c_it;
 
 		double volume = tetrahedral_volume( mesh, ch );
-
+	
 		if (volume < min_volume)
 		{
 			min_volume = volume;
