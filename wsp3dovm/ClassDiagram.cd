@@ -1,0 +1,205 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ClassDiagram MajorVersion="1" MinorVersion="1">
+  <Class Name="timer&lt;Clock&gt;" Collapsed="true">
+    <Position X="2.25" Y="1.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAQAAAAAAAAAAAAgAAQAAAAAAAAAAAAAAAAAAAAAAQA=</HashCode>
+      <FileName>main.cpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="OpenVolumeMesh::VertexHandle" Collapsed="true">
+    <Position X="4" Y="1.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACAAAAAAAAA=</HashCode>
+      <FileName>c:\carleton\openvolumemesh\include\openvolumemesh\core\openvolumemeshhandle.hh</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="OpenVolumeMesh::EdgeHandle" Collapsed="true">
+    <Position X="2.25" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>c:\carleton\openvolumemesh\include\openvolumemesh\core\openvolumemeshhandle.hh</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="OpenVolumeMesh::FaceHandle" Collapsed="true">
+    <Position X="4" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAgAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>c:\carleton\openvolumemesh\include\openvolumemesh\core\openvolumemeshhandle.hh</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="OpenVolumeMesh::CellHandle" Collapsed="true">
+    <Position X="0.5" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAACAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>c:\carleton\openvolumemesh\include\openvolumemesh\core\openvolumemeshhandle.hh</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="OpenVolumeMesh::HalfFaceHandle" Collapsed="true">
+    <Position X="4" Y="2.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>c:\carleton\openvolumemesh\include\openvolumemesh\core\openvolumemeshhandle.hh</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="MeshGenerator" Collapsed="true">
+    <Position X="0.5" Y="1.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>EABAAAAIAAAMAAAIAAAAAAEAAkAgAAAAAIAAAAAAACA=</HashCode>
+      <FileName>MeshGenerator.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="OpenVolumeMesh::GeometryKernel&lt;VecT, TopologyKernelT&gt;">
+    <Position X="7.75" Y="0.5" Width="2.25" />
+    <Compartments>
+      <Compartment Name="Nested Types" Collapsed="false" />
+    </Compartments>
+    <NestedTypes>
+      <Typedef Name="OpenVolumeMesh::GeometryKernel&lt;VecT, TopologyKernelT&gt;::PointT" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>c:\carleton\openvolumemesh\include\openvolumemesh\core\geometrykernel.hh</NewMemberFileName>
+        </TypeIdentifier>
+      </Typedef>
+      <Typedef Name="OpenVolumeMesh::GeometryKernel&lt;VecT, TopologyKernelT&gt;::KernelT" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>c:\carleton\openvolumemesh\include\openvolumemesh\core\geometrykernel.hh</NewMemberFileName>
+        </TypeIdentifier>
+      </Typedef>
+    </NestedTypes>
+    <TypeIdentifier>
+      <HashCode>IEQAgAAAAAAAAAAAAUAAAAEAAIAQQAgAAAAAAgAAAAI=</HashCode>
+      <FileName>c:\carleton\openvolumemesh\include\openvolumemesh\core\geometrykernel.hh</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Struct Name="GraphNode" Collapsed="true">
+    <Position X="2.25" Y="2.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAACAAAAAAEAAEAAAAAAAAAAAAAAAIAEAAAAAAAA=</HashCode>
+      <FileName>common.h</FileName>
+    </TypeIdentifier>
+  </Struct>
+  <Struct Name="GraphEdge" Collapsed="true">
+    <Position X="0.5" Y="2.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgAAAAAAAAAAA=</HashCode>
+      <FileName>common.h</FileName>
+    </TypeIdentifier>
+  </Struct>
+  <Struct Name="Mesh">
+    <Position X="5.75" Y="1.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAABAAAAAAAAAAAAAABAAAAAAAAgIAAAAAAAAAA=</HashCode>
+      <FileName>common.h</FileName>
+    </TypeIdentifier>
+  </Struct>
+  <Struct Name="boost::graph_traits&lt;G&gt;" Collapsed="true">
+    <Position X="4" Y="5.5" Width="1.5" />
+    <Compartments>
+      <Compartment Name="Nested Types" Collapsed="false" />
+    </Compartments>
+    <NestedTypes>
+      <Typedef Name="boost::graph_traits&lt;G&gt;::vertex_descriptor" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>c:\carleton\boost_1_55_0\boost\graph\graph_traits.hpp</NewMemberFileName>
+        </TypeIdentifier>
+      </Typedef>
+      <Typedef Name="boost::graph_traits&lt;G&gt;::edge_descriptor" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>c:\carleton\boost_1_55_0\boost\graph\graph_traits.hpp</NewMemberFileName>
+        </TypeIdentifier>
+      </Typedef>
+      <Typedef Name="boost::graph_traits&lt;G&gt;::edge_parallel_category" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>c:\carleton\boost_1_55_0\boost\graph\graph_traits.hpp</NewMemberFileName>
+        </TypeIdentifier>
+      </Typedef>
+      <Typedef Name="boost::graph_traits&lt;G&gt;::traversal_category" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>c:\carleton\boost_1_55_0\boost\graph\graph_traits.hpp</NewMemberFileName>
+        </TypeIdentifier>
+      </Typedef>
+    </NestedTypes>
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>c:\carleton\boost_1_55_0\boost\graph\graph_traits.hpp</FileName>
+    </TypeIdentifier>
+  </Struct>
+  <Typedef Name="Real" Collapsed="true">
+    <Position X="5.75" Y="5.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>common.h</FileName>
+    </TypeIdentifier>
+  </Typedef>
+  <Typedef Name="Vector" Collapsed="true">
+    <Position X="0.5" Y="5.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>common.h</FileName>
+    </TypeIdentifier>
+  </Typedef>
+  <Typedef Name="Point" Collapsed="true">
+    <Position X="4" Y="4.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>common.h</FileName>
+    </TypeIdentifier>
+  </Typedef>
+  <Typedef Name="Kernel" Collapsed="true">
+    <Position X="2.25" Y="4.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>common.h</FileName>
+    </TypeIdentifier>
+  </Typedef>
+  <Typedef Name="Cell" Collapsed="true">
+    <Position X="0.5" Y="4" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>common.h</FileName>
+    </TypeIdentifier>
+  </Typedef>
+  <Typedef Name="Face" Collapsed="true">
+    <Position X="2.25" Y="4" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>common.h</FileName>
+    </TypeIdentifier>
+  </Typedef>
+  <Typedef Name="Graph" Collapsed="true">
+    <Position X="4" Y="4" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>common.h</FileName>
+    </TypeIdentifier>
+  </Typedef>
+  <Typedef Name="GraphNode_descriptor" Collapsed="true">
+    <Position X="5.75" Y="4.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>common.h</FileName>
+    </TypeIdentifier>
+  </Typedef>
+  <Typedef Name="GraphEdge_descriptor" Collapsed="true">
+    <Position X="5.75" Y="4" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>common.h</FileName>
+    </TypeIdentifier>
+  </Typedef>
+  <Typedef Name="Weight" Collapsed="true">
+    <Position X="2.25" Y="5.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>common.h</FileName>
+    </TypeIdentifier>
+  </Typedef>
+  <Typedef Name="OpenVolumeMesh::GeometricPolyhedralMeshV3d" Collapsed="true">
+    <Position X="5.75" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>c:\carleton\openvolumemesh\include\openvolumemesh\mesh\polyhedralmesh.hh</FileName>
+    </TypeIdentifier>
+  </Typedef>
+  <Font Name="Segoe UI" Size="9" />
+</ClassDiagram>

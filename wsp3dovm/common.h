@@ -99,6 +99,49 @@ struct Mesh : public OpenVolumeMesh::GeometricPolyhedralMeshV3d
 	double& weight(CellHandle ch) { return _cellWeight[ch.idx()]; }
 	double& weight(FaceHandle fh) { return _faceWeight[fh.idx()]; }
 	double& weight(EdgeHandle eh) { return _edgeWeight[eh.idx()]; }
+
+	void print_memory_statistics()
+	{
+		std::cout << "verts: " << n_vertices() << std::endl;
+		std::cout << "edges: " << n_edges() << std::endl;
+		std::cout << "faces: " << n_faces() << std::endl;
+		std::cout << "cells: " << n_cells() << std::endl;
+
+		size_t total_edges_v = 2 * edges_.size();
+		std::cout << "total_edges_v:   " << total_edges_v << std::endl;
+
+		size_t total_faces_heh = 0;
+		for (int i = 0; i < faces_.size(); ++i)
+			total_faces_heh += faces_[i].halfedges().size();
+		std::cout << "total_faces_heh: " << total_faces_heh << std::endl;
+
+		size_t total_cells_hfh = 0;
+		for (int i = 0; i < cells_.size(); ++i)
+			total_cells_hfh += cells_[i].halffaces().size();
+		std::cout << "total_cells_hfh: " << total_cells_hfh << std::endl;
+
+		if (this->has_vertex_bottom_up_incidences())
+		{
+			size_t total_outgoing_hes_per_vertex = 0;
+			for (int i = 0; i < outgoing_hes_per_vertex_.size(); ++i)
+				total_outgoing_hes_per_vertex += outgoing_hes_per_vertex_[i].size();
+			std::cout << "total_outgoing_hes_per_vertex: " << total_outgoing_hes_per_vertex << std::endl;
+		}
+
+		if (this->has_edge_bottom_up_incidences())
+		{
+			size_t total_incident_hfs_per_he = 0;
+			for (int i = 0; i < incident_hfs_per_he_.size(); ++i)
+				total_incident_hfs_per_he += incident_hfs_per_he_[i].size();
+			std::cout << "total_incident_hfs_per_he: " << total_incident_hfs_per_he << std::endl;
+		}
+
+		if (this->has_face_bottom_up_incidences())
+		{
+			size_t total_incident_cell_per_hf = incident_cell_per_hf_.size();
+			std::cout << "total_incident_cell_per_hf: " << total_incident_cell_per_hf << std::endl;
+		}
+	}
 };
 
 #endif

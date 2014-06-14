@@ -15,7 +15,7 @@ void write_shortest_path_tree_vtk
 		return;
 	}
 
-	int n = boost::num_vertices(graph);
+	size_t n = boost::num_vertices(graph);
 
 	file <<
 		"# vtk DataFile Version 2.0\n"
@@ -112,7 +112,7 @@ void write_shortest_path_max_vtk
 		return;
 	}
 
-	int n = boost::num_vertices(graph);
+	size_t n = boost::num_vertices(graph);
 
 	file <<
 		"# vtk DataFile Version 2.0\n"

@@ -34,7 +34,7 @@ static void connect_steiner_points_for_cell(Graph &graph, std::vector<GraphNode_
 			GraphNode_descriptor v = steiner_points[och.idx()];
 			Point pv = graph[v].point;
 
-			Weight edge_weight = (pu - pv).norm(); // TODO: weighted length !
+			Weight edge_weight = static_cast<Weight>((pu - pv).norm()); // TODO: weighted length !
 
 			//Weight w0 = sqrt(SquaredDistPoint3Triangle3( pu, p0, p1, p2));
 			//Weight w1 = sqrt(SquaredDistPoint3Triangle3( pv, p0, p1, p2));

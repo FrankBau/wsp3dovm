@@ -100,7 +100,12 @@ void calc_edge_weights(Mesh &mesh)
 
 int main(int argc, char** argv)
 {
+	timer<high_resolution_clock> total_time;
 	Mesh mesh;
+
+	std::cout << "sizeof an int:    " << sizeof(int) << std::endl;
+	std::cout << "sizeof a void*:   " << sizeof(void*) << std::endl;
+	std::cout << "sizeof a *Handle: " << sizeof(EdgeHandle) << std::endl;
 
 	//boost::filesystem::path inputfilename("../../Meshes/holmes_off/geometry/tetrahedron.1");
 	//boost::filesystem::path inputfilename("../..//Meshes/misc/cube.1");
@@ -151,7 +156,7 @@ int main(int argc, char** argv)
 	calc_face_weights(mesh);
 	calc_edge_weights(mesh);
 
-	//dump(mesh);
+	mesh.print_memory_statistics();
 	print_mesh_statistics(mesh);
 
 	{
@@ -196,7 +201,7 @@ int main(int argc, char** argv)
 
 	// write_graph_dot("graph.dot", graph);
 
-	std::cout << "This is the end..." << std::endl;
+	std::cout << "This is the end, total time: " << total_time.seconds() << " s" << std::endl;
 
 	return EXIT_SUCCESS;
 }

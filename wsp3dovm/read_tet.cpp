@@ -11,8 +11,8 @@ int first_edge_number = 0;
 int first_facet_number = 0;
 int first_tetra_number = 0;
 
-// make vertices from point input, add them to mesh and keep 0-based indices in vector
-void read_vertices( MeshGenerator &meshGenerator, std::string filename)
+// make nodes from point input, add them to mesh and keep 0-based indices in vector
+void read_nodes( MeshGenerator &meshGenerator, std::string filename)
 {
 	int number_of_nodes;
 	int dimension;
@@ -32,7 +32,7 @@ void read_vertices( MeshGenerator &meshGenerator, std::string filename)
 		std::cerr << "read_tet: wrong dimension found in .node file \"" << filename << "\", exit" << std::endl;
 		exit(EXIT_FAILURE);
 	}
-	std::cout << "reading " << number_of_nodes << " nodes...";
+	std::cout << "  reading " << number_of_nodes << " nodes..." << std::endl;
 	for (int i = 0; i < number_of_nodes; ++i)
 	{
 		int j;
@@ -68,7 +68,6 @@ void read_vertices( MeshGenerator &meshGenerator, std::string filename)
 			node_file >> j;
 	}
 
-	std::cout << " done." << std::endl;
 	node_file.close();
 }
 
@@ -76,17 +75,22 @@ void read_tetras( MeshGenerator &meshGenerator, std::string filename)
 {
 	int number_of_tetras;
 	int number_of_points;
-	bool has_boundary_markers;
+	bool has_boundary_marker;
 
 	// file format see 
-	std::ifstream file(filename);
-	file >> number_of_tetras >> number_of_points >> has_boundary_markers;
+	std::ifstream tetra_file(filename);
+	if (!tetra_file.is_open())
+	{
+		std::cerr << "read_tet: failed to open .ele file \"" << filename << "\", exit" << std::endl;
+		exit(EXIT_FAILURE);
+	}
+	tetra_file >> number_of_tetras >> number_of_points >> has_boundary_marker;
 	if (number_of_points != 4)
 	{
 		std::cerr << "number of points 4 expected, found " << number_of_points << ", exit" << std::endl;
 		exit(EXIT_FAILURE);
 	}
-	std::cout << "reading " << number_of_tetras << " tetras...";
+	std::cout << "  reading " << number_of_tetras << " tetras..." << std::endl;
 	for (int i = 0; i < number_of_tetras; ++i)
 	{
 		int j;
@@ -94,7 +98,7 @@ void read_tetras( MeshGenerator &meshGenerator, std::string filename)
 		int v;
 		int w;
 		int x;
-		if (!(file >> j >> u >> v >> w >> x))
+		if (!(tetra_file >> j >> u >> v >> w >> x))
 		{
 			std::cerr << "failed to read tetra " << i << std::endl;
 			exit(EXIT_FAILURE);
@@ -120,11 +124,10 @@ void read_tetras( MeshGenerator &meshGenerator, std::string filename)
 		meshGenerator.add_cell_vertex(x + 1);
 
 		// ignored
-		if (has_boundary_markers)
-			file >> j;
+		if (has_boundary_marker)
+			tetra_file >> j;
 	}
-	std::cout << " done." << std::endl;
-	file.close();
+	tetra_file.close();
 }
 
 
@@ -132,11 +135,12 @@ void read_tet(Mesh &mesh, std::string filename)
 {
 	boost::filesystem::path input_pathname = filename;
 	
-	std::cout << "slurping tetraheder soup from " << filename << " ..." << std::endl;
+	std::cout << "read_tet: slurping tetraheder soup from " << filename << " ..." << std::endl;
 	MeshGenerator generator(mesh);
 
 	// all nodes
-	read_vertices(generator, input_pathname.string() + ".node");
+	std::cout << "  read_nodes..." << std::endl;
+	read_nodes(generator, input_pathname.string() + ".node");
 
 	// these are only the boundary edges
 	// read_edges ( edges, "C:/Carleton/CGAL-4.4/demo/Polyhedron/data/ellipsoid.1.edge");
@@ -146,10 +150,28 @@ void read_tet(Mesh &mesh, std::string filename)
 
 	// all tetrahedra
 
+	std::cout << "  enable_bottom_up_incidences(false)..." << std::endl;
 	mesh.enable_bottom_up_incidences(false);
-	mesh.enable_vertex_bottom_up_incidences(true); // otherwise add_edge makes an expensive quadratic search
+
+	std::cout << "  enable_vertex_bottom_up_incidences(true)..." << std::endl;
+	// otherwise add_edge makes an expensive quadratic search
+	mesh.enable_vertex_bottom_up_incidences(true);
+
+	std::cout << "  read_tetras..." << std::endl;
 	read_tetras(generator, input_pathname.string() + ".ele");
-	mesh.enable_bottom_up_incidences(true); // rebuild them at once is much cheaper
+
+	// now we can free some memory which is needed for other data structures:
+	// this caused to performance penalty (tested on NewFineMesh.1 -p)
+	std::cout << "  enable_vertex_bottom_up_incidences(false)..." << std::endl;
+	mesh.enable_vertex_bottom_up_incidences(false);
+
+	// otherwise would break later calls to some iterators (which?)
+	std::cout << "  enable_edge_bottom_up_incidences(true)..." << std::endl;
+	mesh.enable_edge_bottom_up_incidences(true);
+
+	// otherwise would break later calls to some iterators (which?)
+	std::cout << "  enable_face_bottom_up_incidences(true)..." << std::endl;
+	mesh.enable_face_bottom_up_incidences(true);
 
 	std::cout << "read_tet finished." << std::endl;
 }

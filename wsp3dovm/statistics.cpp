@@ -169,10 +169,11 @@ void print_volume_statistics(Mesh &mesh)
 
 void print_general_statistics(Mesh &mesh)
 {
-	std::cout << "vertices: " << mesh.n_vertices() << std::endl;
-	std::cout << "edges   : " << mesh.n_edges() << std::endl;
-	std::cout << "facets  : " << mesh.n_faces() << std::endl;
-	std::cout << "cells   : " << mesh.n_cells() << std::endl;
+// those moved to print_memory_statistics which needs access to protected members
+//	std::cout << "vertices: " << mesh.n_vertices() << std::endl;
+//	std::cout << "edges   : " << mesh.n_edges() << std::endl;
+//	std::cout << "facets  : " << mesh.n_faces() << std::endl;
+//	std::cout << "cells   : " << mesh.n_cells() << std::endl;
 	std::cout << "genus   : " << mesh.genus() << std::endl;
 } 
 
