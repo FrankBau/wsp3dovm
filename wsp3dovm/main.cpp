@@ -184,7 +184,8 @@ int main(int argc, char** argv)
 			*vertices(graph).first,
 			boost::weight_map(get(&GraphEdge::weight, graph)).
 			distance_map(boost::make_iterator_property_map(distances.begin(), get(boost::vertex_index, graph))).
-			predecessor_map(boost::make_iterator_property_map(predecessors.begin(), get(boost::vertex_index, graph)))
+			predecessor_map(boost::make_iterator_property_map(predecessors.begin(), get(boost::vertex_index, graph))).
+			distance_inf(std::numeric_limits<double>::infinity())
 		);
 		std::cout << "dijkstra_shortest_paths: " << t.seconds() << " s" << std::endl;
 	}

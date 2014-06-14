@@ -89,7 +89,7 @@ void write_shortest_path_max_vtk
 
 	for (int i = 0; i < distances.size(); ++i)
 	{
-		if (distances[i] > max_distance)
+		if (std::isfinite(distances[i]) && distances[i] > max_distance)
 		{
 			t = i;
 			max_distance = distances[i];
@@ -99,8 +99,8 @@ void write_shortest_path_max_vtk
 	int h = hops(predecessors, t);
 
 	std::cout 
-	<< "longest distance from s = " << graph[s].cell.idx() 
-	<< " has t = " << graph[t].cell.idx() 
+	<< "longest distance from s=" << graph[s].cell.idx() 
+	<< " to t=" << graph[t].cell.idx() 
 	<< " distance = " << max_distance 
 	<< " #hops = " << h 
 	<< std::endl;
@@ -167,7 +167,6 @@ void write_vtk(Mesh &mesh, std::string filename)
 		std::cerr << "failed to open file " << filename << std::endl;
 		return;
 	}
-
 
 	int number_of_vertices = mesh.n_vertices();
 

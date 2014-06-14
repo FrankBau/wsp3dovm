@@ -16,15 +16,20 @@ void read_vertices( MeshGenerator &meshGenerator, std::string filename)
 {
 	int number_of_nodes;
 	int dimension;
-	bool has_attribute;
-	bool has_boundary_markers;
+	int number_of_attributes;
+	bool has_boundary_marker;
 
 	// file format see http://tetgen.berlios.de/fformats.node.html
 	std::ifstream node_file(filename);
-	node_file >> number_of_nodes >> dimension >> has_attribute >> has_boundary_markers;
+	if (!node_file.is_open())
+	{
+		std::cerr << "read_tet: failed to open .node file \"" << filename << "\", exit" << std::endl;
+		exit(EXIT_FAILURE);
+	}
+	node_file >> number_of_nodes >> dimension >> number_of_attributes >> has_boundary_marker;
 	if (dimension != 3)
 	{
-		std::cerr << "bad node file" << std::endl;
+		std::cerr << "read_tet: wrong dimension found in .node file \"" << filename << "\", exit" << std::endl;
 		exit(EXIT_FAILURE);
 	}
 	std::cout << "reading " << number_of_nodes << " nodes...";
@@ -37,7 +42,7 @@ void read_vertices( MeshGenerator &meshGenerator, std::string filename)
 
 		if (!(node_file >> j >> x >> y >> z))
 		{
-			std::cerr << "failed to read node " << i << std::endl;
+			std::cerr << "read_tet: failed to read node " << i << std::endl;
 			exit(EXIT_FAILURE);
 		}
 
@@ -53,6 +58,14 @@ void read_vertices( MeshGenerator &meshGenerator, std::string filename)
 		meshGenerator.add_vertex_component(x);
 		meshGenerator.add_vertex_component(y);
 		meshGenerator.add_vertex_component(z);
+
+		// attributes, ignored
+		for (int k = 0; k < number_of_attributes; ++ k) 
+			node_file >> j;
+
+		// boundary_marker, ignored
+		if (has_boundary_marker)
+			node_file >> j;
 	}
 
 	std::cout << " done." << std::endl;

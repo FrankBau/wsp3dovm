@@ -1,5 +1,6 @@
 # general stuff
 *.vtk
+*.png
 
 # nix/nux stuff
 *.o
