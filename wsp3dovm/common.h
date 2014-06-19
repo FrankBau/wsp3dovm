@@ -16,6 +16,8 @@
 #include <boost/filesystem.hpp>
 #include <boost/random.hpp>
 #include <boost/chrono.hpp>
+#include <boost/program_options.hpp>
+// I had to remove libboost_program_options... from the linker input list to avoid duplicate symbols
 
 #include <boost/graph/graph_traits.hpp>
 #include <boost/graph/adjacency_list.hpp>
