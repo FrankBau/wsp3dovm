@@ -145,6 +145,11 @@ void print_volume_statistics(Mesh &mesh)
 	std::cout << "min cell volume: " << min_volume << " at cell: " << min_ch.idx() << std::endl;
 	std::cout << "max cell volume: " << max_volume << " at cell: " << max_ch.idx() << std::endl;
 
+	if (min_volume == max_volume)
+	{
+		return;
+	}
+
 	const int num_bins = 10;
 	int histo[num_bins];
 	for (int bin = 0; bin < num_bins; ++bin)

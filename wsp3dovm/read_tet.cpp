@@ -130,7 +130,6 @@ void read_tetras( MeshGenerator &meshGenerator, std::string filename)
 	tetra_file.close();
 }
 
-
 void read_tet(Mesh &mesh, std::string filename)
 {
 	boost::filesystem::path input_pathname = filename;

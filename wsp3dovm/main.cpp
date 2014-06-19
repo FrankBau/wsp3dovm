@@ -24,7 +24,6 @@ public:
 };
 
 
-
 void set_cell_weights(Mesh &mesh)
 {
 	boost::mt19937 rng;
@@ -37,8 +36,8 @@ void set_cell_weights(Mesh &mesh)
 	for (auto c_it = mesh.cells_begin(); c_it != mesh.cells_end(); ++c_it)
 	{
 		CellHandle ch = *c_it;
-		mesh.weight(ch) = get_random_weight();
-		//mesh.weight(ch) = i++;
+		//mesh.weight(ch) = get_random_weight();
+		mesh.weight(ch) = 1;
 	}
 }
 
@@ -76,7 +75,7 @@ void calc_edge_weights(Mesh &mesh)
 		OpenVolumeMesh::HalfEdgeHandle heh0 = Kernel::halfedge_handle(eh, 0);
 		//OpenVolumeMesh::HalfEdgeHandle heh1 = Kernel::halfedge_handle(eh, 1);
 
-		double weight = max_weight;
+		Weight weight = max_weight;
 
 		for( auto hec0 = mesh.hec_iter(heh0); hec0; ++hec0 )
 		{
@@ -169,12 +168,16 @@ int main(int argc, char** argv)
 
 	{
 		timer<high_resolution_clock> t;
-		create_steiner_points(graph, mesh);
-		std::cout << "create_steiner_points: " << t.seconds() << " s" << std::endl;
+		//create_barycentric_steiner_points(graph, mesh);
+		//std::cout << "create_barycentric_steiner_points: " << t.seconds() << " s" << std::endl;
+		create_surface_steiner_points(graph, mesh);
+		std::cout << "create_surface_steiner_points: " << t.seconds() << " s" << std::endl;
 	}
 	
 	std::cout << "graph nodes: " << graph.m_vertices.size() << std::endl;
 	std::cout << "graph edges: " << graph.m_edges.size() << std::endl;
+
+	write_graph_vtk(graph, inputfilename.filename().replace_extension("_steiner_graph.vtk").string());
 
 	// the distances are temporary, so we choose an external property for that
 	std::vector<double> distances(num_vertices(graph));
@@ -197,7 +200,13 @@ int main(int argc, char** argv)
 	
 	write_shortest_path_tree_vtk(graph, predecessors, distances, inputfilename.filename().replace_extension("_wsp_tree.vtk").string());
 
-	write_shortest_path_max_vtk(graph, predecessors, distances, inputfilename.filename().replace_extension("_wsp_max.vtk").string());
+	write_shortest_path_to_vtk(
+		graph, 
+		*(vertices(graph).first+mesh.n_vertices()-1),
+		predecessors, 
+		distances, 
+		inputfilename.filename().replace_extension("_wsp_max.vtk").string()
+	);
 
 	// write_graph_dot("graph.dot", graph);
 

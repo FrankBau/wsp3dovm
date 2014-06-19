@@ -74,34 +74,22 @@ int hops(std::vector<GraphNode_descriptor> &predecessors, GraphNode_descriptor t
 	return h;
 }
 
-void write_shortest_path_max_vtk
+void write_shortest_path_to_vtk
 (
 	Graph &graph,
+	GraphNode_descriptor t,
 	std::vector<GraphNode_descriptor>& predecessors,
 	std::vector<double>& distances,
 	std::string filename
 )
 {
 	int s = 0; // source node index
-	int t = s; // graph node having max. distance, initially t==s
-	double max_distance = distances[t];
-	assert(max_distance == 0.0);
-
-	for (int i = 0; i < distances.size(); ++i)
-	{
-		if (std::isfinite(distances[i]) && distances[i] > max_distance)
-		{
-			t = i;
-			max_distance = distances[i];
-		}
-	}
-	
 	int h = hops(predecessors, t);
 
 	std::cout 
-	<< "longest distance from s=" << graph[s].cell.idx() 
-	<< " to t=" << graph[t].cell.idx() 
-	<< " distance = " << max_distance 
+	<< "from s=" << graph[s].vertex.idx() 
+	<< " to t=" << graph[t].vertex.idx() 
+	<< " distance=" << distances[t]
 	<< " #hops = " << h 
 	<< std::endl;
 
@@ -236,6 +224,69 @@ void write_vtk(Mesh &mesh, std::string filename)
 		file << mesh.weight(*cit);
 		file << "\n";
 	}
+
+	file.close();
+}
+
+void write_graph_vtk
+(
+Graph &graph,
+std::string filename
+)
+{
+	std::ofstream file(filename, std::ios::trunc);
+	if (!file.is_open())
+	{
+		std::cerr << "failed to open file " << filename << std::endl;
+		return;
+	}
+
+	file <<
+		"# vtk DataFile Version 2.0\n"
+		"steiner graph\n"
+		"ASCII\n"
+		"DATASET UNSTRUCTURED_GRID\n";
+	file << "POINTS " << num_vertices(graph) << " double\n";
+
+	std::vector<int> id(num_vertices(graph));
+	int i = 0;
+	Graph::vertex_iterator vertexIt, vertexEnd;
+	for (boost::tie(vertexIt, vertexEnd) = boost::vertices(graph); vertexIt != vertexEnd; ++vertexIt)
+	//for (auto v : graph.m_vertices )
+	{
+		GraphNode_descriptor u = *vertexIt;
+		id[u] = i++;
+		file << graph[u].point << "\n";
+	}
+
+	file << "CELLS " << num_edges(graph) << " " << 3 * num_edges(graph) << "\n";
+	for (auto e : graph.m_edges)
+	{
+		GraphNode_descriptor u = e.m_source;
+		GraphNode_descriptor v = e.m_target;
+		file << "2 " << id[u] << " " << id[v] << "\n";
+	}
+
+	file << "CELL_TYPES " << num_edges(graph) << "\n";
+	for (int i = 0; i < num_edges(graph); ++i)
+	{
+		// vtk cell type 3 is line
+		file << "3" "\n";
+	}
+
+	// dump weight (not cost!) of edges to check that the adjacent  fetures have been calculated correctly
+	file
+		<< "CELL_DATA " << num_edges(graph) << "\n"
+		<< "SCALARS edge_weight double 1\n"
+		<< "LOOKUP_TABLE default\n";
+
+	Graph::edge_iterator edgeIt, edgeEnd;
+	for (boost::tie(edgeIt, edgeEnd) = boost::edges(graph); edgeIt != edgeEnd; ++edgeIt)
+	{
+		GraphEdge_descriptor edge = *edgeIt;
+		file << graph[edge].weight << "\n";
+	}
+	file << "\n";
 
 	file.close();
 }

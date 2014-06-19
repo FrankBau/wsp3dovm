@@ -40,15 +40,20 @@ typedef OpenVolumeMesh::VertexHandle            VertexHandle;
 typedef OpenVolumeMesh::EdgeHandle              EdgeHandle;
 typedef OpenVolumeMesh::FaceHandle              FaceHandle;
 typedef OpenVolumeMesh::CellHandle              CellHandle;
+typedef OpenVolumeMesh::OpenVolumeMeshHandle    MeshHandle;
 
 typedef OpenVolumeMesh::HalfFaceHandle          HalfFaceHandle;
+typedef OpenVolumeMesh::HalfEdgeHandle          HalfEdgeHandle;
 
 typedef OpenVolumeMesh::TopologyKernel          Kernel;
 
 typedef Kernel::Cell                            Cell;
 typedef Kernel::Face                            Face;
+typedef Kernel::Edge                            Edge;
 
-const double max_weight = std::numeric_limits<double>::max();
+typedef double Weight;
+
+const Weight max_weight = std::numeric_limits<double>::max();
 
 ///////////////////////////// boost Graph /////////////////////////////
 
@@ -76,29 +81,36 @@ public:
 		// std::cout << "GraphNode()" << std::endl;
 	}
 
-	CellHandle cell = 0;   // the cell it belongs to
-	int i = -1;             // index i (face related node) 
-	int j = -1;             // rsp. i,j (edge related node)
-	Point point;
+	// the original vertex in tetrahedralization
+	VertexHandle vertex = OpenVolumeMesh::TopologyKernel::InvalidCellHandle;
+	Point point;	// geometric location
 };
 
 struct GraphEdge
 {
 	// we could have done this with internal properties too
-	double weight;
+	Weight weight;
 };
-
-typedef float Weight;
 
 struct Mesh : public OpenVolumeMesh::GeometricPolyhedralMeshV3d
 {
 	std::vector<double> _cellWeight;
 	std::vector<double> _faceWeight;
 	std::vector<double> _edgeWeight;
+	
+	// graph nodes interior to mesh features
+	// we dont have cell interior nodes for now
+	std::vector<std::vector<GraphNode_descriptor>> _faceNodes;
+	std::vector<std::vector<GraphNode_descriptor>> _edgeNodes;
+	std::vector<GraphNode_descriptor> _vertexNode; // only one per vertex
 
 	double& weight(CellHandle ch) { return _cellWeight[ch.idx()]; }
 	double& weight(FaceHandle fh) { return _faceWeight[fh.idx()]; }
 	double& weight(EdgeHandle eh) { return _edgeWeight[eh.idx()]; }
+
+	std::vector<GraphNode_descriptor>& f_nodes(FaceHandle fh) { return _faceNodes[fh.idx()]; }
+	std::vector<GraphNode_descriptor>& e_nodes(EdgeHandle eh) { return _edgeNodes[eh.idx()]; }
+	GraphNode_descriptor& v_node(VertexHandle vh) { return _vertexNode[vh.idx()]; }
 
 	void print_memory_statistics()
 	{
@@ -143,5 +155,11 @@ struct Mesh : public OpenVolumeMesh::GeometricPolyhedralMeshV3d
 		}
 	}
 };
+
+static inline double norm(const Point& p, const Point& q)
+{
+	Vector diff = p - q;
+	return sqrt(diff.sqrnorm());
+}
 
 #endif
