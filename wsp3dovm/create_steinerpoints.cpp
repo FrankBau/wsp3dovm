@@ -258,3 +258,234 @@ void create_surface_steiner_points(Graph &graph, Mesh &mesh)
 		}
 	}
 }
+
+/////////////////////////////////////////////////////////////////////////////////////////////
+// third strategy: ctreate steine nodes and run the improved greedy alg. to calulate a t-spanner
+// see http://cg.scs.carleton.ca/~mfarshi/pub/ESA05.pdf
+
+void create_steiner_graph_nodes(Graph &graph, Mesh &mesh)
+{
+	const int nodes_per_vertex = 1;		// 0 or 1
+	const int nodes_per_edge = 1;		// 0..k equidistant
+	const int nodes_per_face = 1;		// 0..1 (barycenter) ..k (random)
+	const int nodes_per_cell = 0;		// only 0 because shortetst paths wont bend within a (constant weight!) cell
+
+	if (nodes_per_vertex == 1)
+	{
+		mesh._vertexNode.resize(mesh.n_vertices());
+
+		// create a graph node for each mesh vertex
+		for (auto it = mesh.vertices_begin(); it != mesh.vertices_end(); ++it)
+		{
+			VertexHandle vh = *it;
+			if (vh.is_valid())
+			{
+				GraphNode_descriptor node = boost::add_vertex(graph);
+				graph[node].vertex = vh;
+				graph[node].point = mesh.vertex(vh);
+				mesh.v_node(vh) = node;
+			}
+		}
+	}
+
+	if (nodes_per_edge > 0)
+	{
+		mesh._edgeNodes.resize(nodes_per_edge * mesh.n_edges());
+
+		// create a graph node for each mesh edge
+		for (auto it = mesh.edges_begin(); it != mesh.edges_end(); ++it)
+		{
+			EdgeHandle eh = *it;
+			if (eh.is_valid())
+			{
+				GraphNode_descriptor node = boost::add_vertex(graph);
+				graph[node].point = mesh.barycenter(eh);
+				mesh.e_nodes(eh).push_back(node);
+			}
+		}
+	}
+
+	if (nodes_per_face > 0)
+	{
+		mesh._faceNodes.resize(nodes_per_face * mesh.n_faces());
+		// create a graph node for each mesh face
+		for (auto it = mesh.faces_begin(); it != mesh.faces_end(); ++it)
+		{
+			FaceHandle fh = *it;
+			if (fh.is_valid())
+			{
+				GraphNode_descriptor node = boost::add_vertex(graph);
+				graph[node].point = mesh.barycenter(fh);
+				mesh.f_nodes(fh).push_back(node);
+			}
+		}
+	}
+}
+
+std::vector<GraphNode_descriptor> cell_nodes(Graph &graph, Mesh &mesh, CellHandle ch)
+{
+	std::set<EdgeHandle> edges;			// edges of cell
+	std::set<VertexHandle> vertices;	// vertices of cell
+
+	std::vector<GraphNode_descriptor> all_nodes;
+	// collect all graph nodes belonging to that cell
+
+	for (auto hfh : mesh.cell(ch).halffaces())
+	{
+		FaceHandle fh = mesh.face_handle(hfh);
+		all_nodes.insert(all_nodes.end(), mesh.f_nodes(fh).begin(), mesh.f_nodes(fh).end());
+
+		Face face = mesh.face(fh);
+
+		for (auto heh : face.halfedges())
+		{
+			EdgeHandle eh = mesh.edge_handle(heh);
+			if (edges.find(eh) == edges.end())
+			{
+				all_nodes.insert(all_nodes.end(), mesh.e_nodes(eh).begin(), mesh.e_nodes(eh).end());
+				edges.insert(eh);
+
+				Edge edge = mesh.edge(eh);
+
+				VertexHandle vh1 = edge.from_vertex();
+				if (vertices.find(vh1) == vertices.end())
+				{
+					all_nodes.insert(all_nodes.end(), mesh.v_node(vh1));
+					vertices.insert(vh1);
+				}
+
+				VertexHandle vh2 = edge.to_vertex();
+				if (vertices.find(vh2) == vertices.end())
+				{
+					all_nodes.insert(all_nodes.end(), mesh.v_node(vh2));
+					vertices.insert(vh2);
+				}
+			}
+		}
+	}
+	return all_nodes;
+}
+
+// after fighting with boost::subgraph for a whileI decided to re-invent the wheel
+
+struct SpannerGraphNode;
+struct SpannerGraphEdge;
+
+typedef
+boost::adjacency_list
+<
+	boost::vecS,
+	boost::vecS,
+	boost::undirectedS,
+	SpannerGraphNode,
+	SpannerGraphEdge
+>
+SpannerGraph;
+
+typedef boost::graph_traits<SpannerGraph>::vertex_descriptor SpannerGraphNode_descriptor;
+typedef boost::graph_traits<SpannerGraph>::edge_descriptor   SpannerGraphEdge_descriptor;
+
+struct SpannerGraphNode
+{
+	GraphNode_descriptor original_node;
+};
+
+struct SpannerGraphEdge
+{
+	SpannerGraphEdge() : length(-1) {}
+
+	SpannerGraphEdge(SpannerGraphNode_descriptor u, SpannerGraphNode_descriptor v, double length)
+	: u(u), v(v), length(length)
+	{
+	}
+
+	bool operator < (const SpannerGraphEdge &rhs) const { return length < rhs.length; }
+
+	SpannerGraphNode_descriptor u;
+	SpannerGraphNode_descriptor v;
+	double length;
+};
+
+
+void create_steiner_graph_improved_spanner(Graph &graph, Mesh &mesh)
+{
+	double t = 0.5; // spanner expansion parameter
+
+	create_steiner_graph_nodes(graph, mesh);
+
+	for (auto it = mesh.cells_begin(); it != mesh.cells_end(); ++it)
+	{
+		CellHandle ch = *it;
+
+		std::vector<GraphNode_descriptor> nodes = cell_nodes(graph, mesh, ch);
+
+		SpannerGraph spanner;
+
+		for (auto node : nodes)
+		{
+			SpannerGraphNode_descriptor u = boost::add_vertex(spanner);
+			spanner[u].original_node = node;
+		}
+
+		// now we build a sorted list of potential edges
+		std::vector<SpannerGraphEdge> potential_edges;
+
+		auto uit = vertices(spanner);
+		for (auto u = uit.first; u != uit.second; ++u)
+		{
+			auto vit = vertices(spanner);
+			for (auto v = u+1; v != vit.second; ++v)
+			{
+				double length = norm(graph[spanner[*u].original_node].point, graph[spanner[*v].original_node].point);
+				assert(length > 0);
+				potential_edges.push_back(SpannerGraphEdge(*u, *v, length));
+			}
+		}
+
+		// sort edges by length
+		std::sort(potential_edges.begin(), potential_edges.end());
+
+		// determine shortest path arleady in subgraph
+		for (auto potential_edge : potential_edges)
+		{
+			std::vector<double> distances(num_vertices(spanner));
+			std::vector<SpannerGraphNode_descriptor> predecessors(num_vertices(spanner));
+
+			SpannerGraphNode_descriptor u = potential_edge.u;
+			SpannerGraphNode_descriptor v = potential_edge.v;
+
+			// this is the "unimproved" version with cubic runtime
+			boost::dijkstra_shortest_paths
+			(
+				spanner,
+				u,
+				boost::weight_map(get(&SpannerGraphEdge::length, spanner)).
+				distance_map(boost::make_iterator_property_map(distances.begin(), get(boost::vertex_index, graph))).
+				predecessor_map(boost::make_iterator_property_map(predecessors.begin(), get(boost::vertex_index, graph))).
+				distance_inf(std::numeric_limits<double>::infinity())
+			);
+
+			GraphNode_descriptor ou = spanner[u].original_node;
+			GraphNode_descriptor ov = spanner[v].original_node;
+
+			Point pu = graph[ou].point;
+			Point pv = graph[ov].point;
+
+			// add potential edge to graph iff its shorter that limit
+			if (distances[v] > (1 + t)*norm(pu,pv))
+			{
+				// add edge to spanner and to big graph
+				SpannerGraphEdge_descriptor spanner_edge = boost::add_edge(u, v, spanner ).first;
+				spanner[spanner_edge].length = potential_edge.length;
+				spanner[spanner_edge].u = potential_edge.u;
+				spanner[spanner_edge].v = potential_edge.v;
+
+				GraphEdge_descriptor edge;
+				bool inserted;
+				boost::tie(edge, inserted) = boost::add_edge(ou, ov, graph);
+				assert(inserted);
+				graph[edge].weight = potential_edge.length; //TODO * cell_weigth or face_weigth or edge_weigth ??
+			}
+		}
+	}
+}

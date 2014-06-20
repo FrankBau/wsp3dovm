@@ -171,10 +171,15 @@ int main(int argc, char** argv)
 
 	{
 		timer<high_resolution_clock> t;
+		
 		//create_barycentric_steiner_points(graph, mesh);
 		//std::cout << "create_barycentric_steiner_points: " << t.seconds() << " s" << std::endl;
-		create_surface_steiner_points(graph, mesh);
-		std::cout << "create_surface_steiner_points: " << t.seconds() << " s" << std::endl;
+
+		//create_surface_steiner_points(graph, mesh);
+		//std::cout << "create_surface_steiner_points: " << t.seconds() << " s" << std::endl;
+
+		create_steiner_graph_improved_spanner(graph, mesh);
+		std::cout << "create_steiner_graph_improved_spanner: " << t.seconds() << " s" << std::endl;
 	}
 	
 	std::cout << "graph nodes: " << graph.m_vertices.size() << std::endl;

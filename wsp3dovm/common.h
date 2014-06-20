@@ -11,6 +11,7 @@
 #include <iostream>
 #include <vector>
 #include <map>
+#include <set>
 #include <tuple>
 
 #include <boost/filesystem.hpp>
@@ -19,6 +20,7 @@
 #include <boost/program_options.hpp>
 // I had to remove libboost_program_options... from the linker input list to avoid duplicate symbols
 
+#include <boost/graph/subgraph.hpp>
 #include <boost/graph/graph_traits.hpp>
 #include <boost/graph/adjacency_list.hpp>
 #include <boost/graph/dijkstra_shortest_paths.hpp>
@@ -62,13 +64,16 @@ const Weight max_weight = std::numeric_limits<double>::max();
 struct GraphNode;
 struct GraphEdge;
 
-typedef boost::adjacency_list <
-	boost::vecS,
-	boost::vecS,
-	boost::undirectedS,
-	GraphNode,
-	GraphEdge
-> Graph;
+typedef 
+		boost::adjacency_list 
+		<
+			boost::vecS,
+			boost::vecS,
+			boost::undirectedS,
+			GraphNode,
+			GraphEdge
+		>
+Graph;
 
 typedef boost::graph_traits<Graph>::vertex_descriptor GraphNode_descriptor;
 typedef boost::graph_traits<Graph>::edge_descriptor   GraphEdge_descriptor;
