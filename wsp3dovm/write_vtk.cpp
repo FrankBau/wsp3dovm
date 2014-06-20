@@ -43,7 +43,7 @@ void write_shortest_path_tree_vtk
 	}
 
 	file << "CELL_TYPES " << n << "\n";
-	for (int i = 0; i < n; ++i)
+	for (size_t i = 0; i < n; ++i)
 	{
 		// vtk cell type 3 is line
 		file << "3" "\n";
@@ -268,7 +268,7 @@ std::string filename
 	}
 
 	file << "CELL_TYPES " << num_edges(graph) << "\n";
-	for (int i = 0; i < num_edges(graph); ++i)
+	for (size_t i = 0; i < num_edges(graph); ++i)
 	{
 		// vtk cell type 3 is line
 		file << "3" "\n";

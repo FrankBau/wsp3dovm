@@ -120,12 +120,12 @@
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>false</SDLCheck>
-      <AdditionalIncludeDirectories>$(SolutionDir)\..\OpenVolumeMesh\include;$(SolutionDir)\..\boost_1_55_0;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)\..\..\OpenVolumeMesh\include;$(SolutionDir)\..\..\boost_1_55_0;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>$(SolutionDir)\..\OpenVolumeMesh\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(SolutionDir)\..\..\OpenVolumeMesh\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>OpenVolumeMesh.lib</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
@@ -208,8 +208,8 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>OpenVolumeMesh_release.lib;boost_atomic-vc120-mt-1_55.lib;boost_bzip2-vc120-mt-1_55.lib;boost_chrono-vc120-mt-1_55.lib;boost_context-vc120-mt-1_55.lib;boost_coroutine-vc120-mt-1_55.lib;boost_date_time-vc120-mt-1_55.lib;boost_filesystem-vc120-mt-1_55.lib;boost_graph-vc120-mt-1_55.lib;boost_iostreams-vc120-mt-1_55.lib;boost_locale-vc120-mt-1_55.lib;boost_log-vc120-mt-1_55.lib;boost_log_setup-vc120-mt-1_55.lib;boost_math_c99-vc120-mt-1_55.lib;boost_math_c99f-vc120-mt-1_55.lib;boost_math_c99l-vc120-mt-1_55.lib;boost_math_tr1-vc120-mt-1_55.lib;boost_math_tr1f-vc120-mt-1_55.lib;boost_math_tr1l-vc120-mt-1_55.lib;boost_prg_exec_monitor-vc120-mt-1_55.lib;boost_program_options-vc120-mt-1_55.lib;boost_python-vc120-mt-1_55.lib;boost_random-vc120-mt-1_55.lib;boost_regex-vc120-mt-1_55.lib;boost_system-vc120-mt-1_55.lib;boost_thread-vc120-mt-1_55.lib;boost_timer-vc120-mt-1_55.lib;boost_unit_test_framework-vc120-mt-1_55.lib;boost_wave-vc120-mt-1_55.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(SolutionDir)\..\..\OpenVolumeMesh\lib;$(SolutionDir)\..\..\boost_1_55_0\lib64-msvc-12.0;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>OpenVolumeMesh_release.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)\..\..\OpenVolumeMesh\build\Build\lib;$(SolutionDir)\..\..\boost_1_55_0\lib64-msvc-12.0;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">

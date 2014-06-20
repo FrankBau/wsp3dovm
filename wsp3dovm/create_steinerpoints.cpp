@@ -406,11 +406,8 @@ struct SpannerGraphEdge
 	double length;
 };
 
-
-void create_steiner_graph_improved_spanner(Graph &graph, Mesh &mesh)
+void create_steiner_graph_improved_spanner(Graph &graph, Mesh &mesh, double stretch)
 {
-	double t = 0.5; // spanner expansion parameter
-
 	create_steiner_graph_nodes(graph, mesh);
 
 	for (auto it = mesh.cells_begin(); it != mesh.cells_end(); ++it)
@@ -472,7 +469,7 @@ void create_steiner_graph_improved_spanner(Graph &graph, Mesh &mesh)
 			Point pv = graph[ov].point;
 
 			// add potential edge to graph iff its shorter that limit
-			if (distances[v] > (1 + t)*norm(pu,pv))
+			if (distances[v] > (1 + stretch)*norm(pu,pv))
 			{
 				// add edge to spanner and to big graph
 				SpannerGraphEdge_descriptor spanner_edge = boost::add_edge(u, v, spanner ).first;

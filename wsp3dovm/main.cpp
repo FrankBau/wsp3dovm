@@ -103,18 +103,20 @@ int main(int argc, char** argv)
 {
 	timer<high_resolution_clock> total_time;
 
-	std::cout << "sizeof an int:    " << sizeof(int) << std::endl;
-	std::cout << "sizeof a void*:   " << sizeof(void*) << std::endl;
-	std::cout << "sizeof a *Handle: " << sizeof(EdgeHandle) << std::endl;
+	std::cout << "sizeof an int:   " << sizeof(int) << std::endl;
+	std::cout << "sizeof a void*:  " << sizeof(void*) << std::endl;
+	std::cout << "sizeof a Handle: " << sizeof(EdgeHandle) << std::endl;
 
 	int start_vertex; // for single source shortest paths (Dijkstra)
 	int termination_vertex; // an optional termination vertex for which the shortest path will be reported
+	double stretch; // spaner graph stretch factor
 
 	program_options::options_description desc("Allowed options");
 	desc.add_options()
 		("help,h", "produce help message")
 		("start_vertex,s", program_options::value<int>(&start_vertex)->default_value(0), "shortest path start vertex number")
 		("termination_vertex,t", program_options::value<int>(&termination_vertex)->default_value(-1), "shortest path termination vertex number (-1==none)")
+		("spanner_stretch,x", program_options::value<double>(&stretch)->default_value(0.0), "spanner graph stretch factor")
 		("input-mesh", program_options::value<std::string>(), "set input filename (tetgen 3D mesh files wo extension)")
 		;
 
@@ -148,11 +150,9 @@ int main(int argc, char** argv)
 
 	Mesh mesh;
 
-	{
-		timer<high_resolution_clock> t;
-		read_tet(mesh, inputfilename.string() );
-		std::cout << "read_tet: " << t.seconds() << " s" << std::endl;
-	}
+	timer<high_resolution_clock> t;
+	read_tet(mesh, inputfilename.string() );
+	std::cout << "read_tet: " << t.seconds() << " s" << std::endl;
 
 	set_cell_weights(mesh);
 	calc_face_weights(mesh);
@@ -175,11 +175,16 @@ int main(int argc, char** argv)
 		//create_barycentric_steiner_points(graph, mesh);
 		//std::cout << "create_barycentric_steiner_points: " << t.seconds() << " s" << std::endl;
 
-		//create_surface_steiner_points(graph, mesh);
-		//std::cout << "create_surface_steiner_points: " << t.seconds() << " s" << std::endl;
-
-		create_steiner_graph_improved_spanner(graph, mesh);
-		std::cout << "create_steiner_graph_improved_spanner: " << t.seconds() << " s" << std::endl;
+		if (stretch = 0.0)
+		{
+			create_surface_steiner_points(graph, mesh);
+			std::cout << "create_surface_steiner_points: " << t.seconds() << " s" << std::endl;
+		}
+		else
+		{
+			create_steiner_graph_improved_spanner(graph, mesh);
+			std::cout << "create_steiner_graph_improved_spanner: " << t.seconds() << " s" << std::endl;
+		}
 	}
 	
 	std::cout << "graph nodes: " << graph.m_vertices.size() << std::endl;

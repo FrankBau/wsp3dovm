@@ -29,11 +29,14 @@
 
 #include <boost/property_map/property_map.hpp>
 
-// Include vector classes
+#define INCLUDE_TEMPLATES
 #include <OpenVolumeMesh/Geometry/VectorT.hh>
 #include <OpenVolumeMesh/Mesh/PolyhedralMesh.hh>
 #include <OpenVolumeMesh/Core/OpenVolumeMeshProperty.hh>
 #include <OpenVolumeMesh/Core/PropertyDefines.hh>
+#include <OpenVolumeMesh/Core/PropertyPtr.hh>
+#include <OpenVolumeMesh/FileManager/FileManager.hh>
+#undef INCLUDE_TEMPLATES
 
 // Make some typedefs to facilitate your life
 typedef double                                      Real;
@@ -130,19 +133,19 @@ struct Mesh : public OpenVolumeMesh::GeometricPolyhedralMeshV3d
 		std::cout << "total_edges_v:   " << total_edges_v << std::endl;
 
 		size_t total_faces_heh = 0;
-		for (int i = 0; i < faces_.size(); ++i)
+		for (size_t i = 0; i < faces_.size(); ++i)
 			total_faces_heh += faces_[i].halfedges().size();
 		std::cout << "total_faces_heh: " << total_faces_heh << std::endl;
 
 		size_t total_cells_hfh = 0;
-		for (int i = 0; i < cells_.size(); ++i)
+		for (size_t i = 0; i < cells_.size(); ++i)
 			total_cells_hfh += cells_[i].halffaces().size();
 		std::cout << "total_cells_hfh: " << total_cells_hfh << std::endl;
 
 		if (this->has_vertex_bottom_up_incidences())
 		{
 			size_t total_outgoing_hes_per_vertex = 0;
-			for (int i = 0; i < outgoing_hes_per_vertex_.size(); ++i)
+			for (size_t i = 0; i < outgoing_hes_per_vertex_.size(); ++i)
 				total_outgoing_hes_per_vertex += outgoing_hes_per_vertex_[i].size();
 			std::cout << "total_outgoing_hes_per_vertex: " << total_outgoing_hes_per_vertex << std::endl;
 		}
@@ -150,7 +153,7 @@ struct Mesh : public OpenVolumeMesh::GeometricPolyhedralMeshV3d
 		if (this->has_edge_bottom_up_incidences())
 		{
 			size_t total_incident_hfs_per_he = 0;
-			for (int i = 0; i < incident_hfs_per_he_.size(); ++i)
+			for (size_t i = 0; i < incident_hfs_per_he_.size(); ++i)
 				total_incident_hfs_per_he += incident_hfs_per_he_[i].size();
 			std::cout << "total_incident_hfs_per_he: " << total_incident_hfs_per_he << std::endl;
 		}

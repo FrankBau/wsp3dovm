@@ -4,6 +4,12 @@
 
 #include <fstream>
 
+// starting with tetgen 1.5.1 beta, there are additional new file formats containing 
+// top-down topological information
+// We also tried to save (cache) the topology in .ovm file format and usethat later.
+// However, even this did not shortcut running time because bottom-up data structures
+// have to be generated in memory anyway.
+
 // internally we start at index 0 so we need correction info
 // the start value depends on the software, there is no standard
 int first_point_number = 0;
