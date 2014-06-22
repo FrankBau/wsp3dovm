@@ -261,7 +261,9 @@ void create_surface_steiner_points(Graph &graph, Mesh &mesh)
 
 /////////////////////////////////////////////////////////////////////////////////////////////
 // third strategy: ctreate steine nodes and run the improved greedy alg. to calulate a t-spanner
-// see http://cg.scs.carleton.ca/~mfarshi/pub/ESA05.pdf
+// see http://people.scs.carleton.ca/~michiel/greedyspanner.pdf
+// and http://cg.scs.carleton.ca/~mfarshi/pub/ESA05.pdf
+
 
 void create_steiner_graph_nodes(Graph &graph, Mesh &mesh)
 {
@@ -366,7 +368,7 @@ std::vector<GraphNode_descriptor> cell_nodes(Graph &graph, Mesh &mesh, CellHandl
 	return all_nodes;
 }
 
-// after fighting with boost::subgraph for a whileI decided to re-invent the wheel
+// after fighting with boost::subgraph for a while, I decided to re-invent the wheel
 
 struct SpannerGraphNode;
 struct SpannerGraphEdge;
