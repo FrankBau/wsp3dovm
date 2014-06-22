@@ -175,7 +175,7 @@ int main(int argc, char** argv)
 		//create_barycentric_steiner_points(graph, mesh);
 		//std::cout << "create_barycentric_steiner_points: " << t.seconds() << " s" << std::endl;
 
-		if (stretch = 0.0)
+		if (stretch < 0.0)
 		{
 			create_surface_steiner_points(graph, mesh);
 			std::cout << "create_surface_steiner_points: " << t.seconds() << " s" << std::endl;

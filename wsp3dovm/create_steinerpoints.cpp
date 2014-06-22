@@ -1,5 +1,6 @@
 #include "create_steinerpoints.h"
 
+
 // utmost simple scheme: one point per cell, the barycenter
 static void create_barycentric_steiner_points_for_cell(Graph &graph, std::vector<GraphNode_descriptor> &steiner_points, Mesh &mesh, CellHandle ch)
 {
@@ -265,6 +266,29 @@ void create_surface_steiner_points(Graph &graph, Mesh &mesh)
 // and http://cg.scs.carleton.ca/~mfarshi/pub/ESA05.pdf
 
 
+// this will add an edge (u,v) only if
+// 1 no such edge exists in graph, or
+// 2 existing edge is more expensive (because it runs across a face or mesh edge of a more expensive cell)
+// in the latter case, the original edge will be replaced by the cheaper one
+void add_edge(Graph &graph, GraphNode_descriptor u, GraphNode_descriptor v, Weight cellcost)
+{
+	Weight weight = cellcost * norm(graph[u].point, graph[v].point);
+
+	// this pair stuff is counter intuitive. first is the edge, second the bool
+	std::pair<Graph::edge_descriptor, bool> retrievedEdge = boost::edge(u, v, graph);
+	if (retrievedEdge.second)
+	{
+		graph[retrievedEdge.first].weight = std::min(weight, graph[retrievedEdge.first].weight);
+		//std::cout << "updating edge weigth of edge " << u << ", " << v << std::endl;
+	}
+	else
+	{
+		std::pair<Graph::edge_descriptor, bool> newEdge = boost::add_edge(u, v, graph);
+		graph[newEdge.first].weight = weight;
+		//std::cout << "adding new edge " << u << ", " << v << std::endl;
+	}
+}
+
 void create_steiner_graph_nodes(Graph &graph, Mesh &mesh)
 {
 	const int nodes_per_vertex = 1;		// 0 or 1
@@ -479,11 +503,7 @@ void create_steiner_graph_improved_spanner(Graph &graph, Mesh &mesh, double stre
 				spanner[spanner_edge].u = potential_edge.u;
 				spanner[spanner_edge].v = potential_edge.v;
 
-				GraphEdge_descriptor edge;
-				bool inserted;
-				boost::tie(edge, inserted) = boost::add_edge(ou, ov, graph);
-				assert(inserted);
-				graph[edge].weight = potential_edge.length; //TODO * cell_weigth or face_weigth or edge_weigth ??
+				add_edge(graph, ou, ov, mesh.weight(ch) );
 			}
 		}
 	}
