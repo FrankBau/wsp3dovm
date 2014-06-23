@@ -269,7 +269,7 @@ void create_surface_steiner_points(Graph &graph, Mesh &mesh)
 // this will add an edge (u,v) only if
 // 1 no such edge exists in graph, or
 // 2 existing edge is more expensive (because it runs across a face or mesh edge of a more expensive cell)
-// in the latter case, the original edge will be replaced by the cheaper one
+// in the latter case, weight will be adjusted
 void add_edge(Graph &graph, GraphNode_descriptor u, GraphNode_descriptor v, Weight cellcost)
 {
 	Weight weight = cellcost * norm(graph[u].point, graph[v].point);
@@ -289,61 +289,71 @@ void add_edge(Graph &graph, GraphNode_descriptor u, GraphNode_descriptor v, Weig
 	}
 }
 
-void create_steiner_graph_nodes(Graph &graph, Mesh &mesh)
+void create_steiner_graph_nodes_intervall_scheme(Graph &graph, Mesh &mesh, double yardstick)
 {
-	const int nodes_per_vertex = 1;		// 0 or 1
-	const int nodes_per_edge = 1;		// 0..k equidistant
-	const int nodes_per_face = 1;		// 0..1 (barycenter) ..k (random)
-	const int nodes_per_cell = 0;		// only 0 because shortetst paths wont bend within a (constant weight!) cell
 
-	if (nodes_per_vertex == 1)
+	mesh._vertexNode.resize(mesh.n_vertices());
+
+	// create a graph node for each mesh vertex
+	for (auto it = mesh.vertices_begin(); it != mesh.vertices_end(); ++it)
 	{
-		mesh._vertexNode.resize(mesh.n_vertices());
-
-		// create a graph node for each mesh vertex
-		for (auto it = mesh.vertices_begin(); it != mesh.vertices_end(); ++it)
-		{
-			VertexHandle vh = *it;
-			if (vh.is_valid())
-			{
-				GraphNode_descriptor node = boost::add_vertex(graph);
-				graph[node].vertex = vh;
-				graph[node].point = mesh.vertex(vh);
-				mesh.v_node(vh) = node;
-			}
-		}
+		VertexHandle vh = *it;
+		GraphNode_descriptor node = boost::add_vertex(graph);
+		graph[node].vertex = vh;
+		graph[node].point = mesh.vertex(vh);
+		mesh.v_node(vh) = node;
 	}
 
-	if (nodes_per_edge > 0)
-	{
-		mesh._edgeNodes.resize(nodes_per_edge * mesh.n_edges());
 
-		// create a graph node for each mesh edge
+	// create steiner graph nodes for each mesh edge
+	size_t total_edge_nodes = 0;
+	mesh._edgeNodes.resize(mesh.n_edges());
+	if (yardstick > 0)
+	{
 		for (auto it = mesh.edges_begin(); it != mesh.edges_end(); ++it)
 		{
 			EdgeHandle eh = *it;
-			if (eh.is_valid())
+			VertexHandle u = mesh.edge(eh).from_vertex();
+			VertexHandle v = mesh.edge(eh).to_vertex();
+			Point pu = mesh.vertex(u);
+			Point pv = mesh.vertex(v);
+
+			double edge_length = trunc(norm(pu, pv));
+			Vector edge_direction = pv - pu;
+
+			int k = static_cast<int>(edge_length / yardstick);
+
+			if (k > 0)
 			{
-				GraphNode_descriptor node = boost::add_vertex(graph);
-				graph[node].point = mesh.barycenter(eh);
-				mesh.e_nodes(eh).push_back(node);
+				int min_i = 1; // endpoint u is a vertex point  already inserted
+				int max_i = k - 1;
+				if (norm(pv, static_cast<double>(max_i)*edge_direction / k) < epsilon)
+				{	// last subdivision too close to the end
+					--max_i;
+				}
+				for (int i = min_i; i <= max_i; ++i)
+				{
+					GraphNode_descriptor node = boost::add_vertex(graph);
+					graph[node].point = pu + static_cast<double>(i)*edge_direction / k;
+					mesh.e_nodes(eh).push_back(node);
+					++total_edge_nodes;
+				}
+				//std::cout << "added " << k << " steiner points to edge (" << u << "," << v << ") of length " << edge_length << std::endl;
 			}
 		}
 	}
+	std::cout << "avg. number of steiner nodes on edges created: " << static_cast<double>(total_edge_nodes) / mesh.n_edges() << std::endl;
 
-	if (nodes_per_face > 0)
+	// create a steiner graph nodes for each mesh face
+	mesh._faceNodes.resize(mesh.n_faces());
+	for (auto it = mesh.faces_begin(); it != mesh.faces_end(); ++it)
 	{
-		mesh._faceNodes.resize(nodes_per_face * mesh.n_faces());
-		// create a graph node for each mesh face
-		for (auto it = mesh.faces_begin(); it != mesh.faces_end(); ++it)
+		FaceHandle fh = *it;
+		if (fh.is_valid())
 		{
-			FaceHandle fh = *it;
-			if (fh.is_valid())
-			{
-				GraphNode_descriptor node = boost::add_vertex(graph);
-				graph[node].point = mesh.barycenter(fh);
-				mesh.f_nodes(fh).push_back(node);
-			}
+			GraphNode_descriptor node = boost::add_vertex(graph);
+			graph[node].point = mesh.barycenter(fh);
+			mesh.f_nodes(fh).push_back(node);
 		}
 	}
 }
@@ -432,9 +442,11 @@ struct SpannerGraphEdge
 	double length;
 };
 
-void create_steiner_graph_improved_spanner(Graph &graph, Mesh &mesh, double stretch)
+// stretch: stretch factor t of spanner graph 
+// yardstick: interval length for edge subdivisions
+void create_steiner_graph_improved_spanner(Graph &graph, Mesh &mesh, double stretch, double yardstick)
 {
-	create_steiner_graph_nodes(graph, mesh);
+	create_steiner_graph_nodes_intervall_scheme(graph, mesh, yardstick);
 
 	for (auto it = mesh.cells_begin(); it != mesh.cells_end(); ++it)
 	{

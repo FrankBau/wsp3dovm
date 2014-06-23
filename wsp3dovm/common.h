@@ -62,6 +62,8 @@ typedef double Weight;
 
 const Weight max_weight = std::numeric_limits<double>::max();
 
+const double epsilon = 1E-8; // smaller differences are to be considered 0
+
 ///////////////////////////// boost Graph /////////////////////////////
 
 struct GraphNode;

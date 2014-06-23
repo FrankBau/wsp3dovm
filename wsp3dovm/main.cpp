@@ -109,7 +109,8 @@ int main(int argc, char** argv)
 
 	int start_vertex; // for single source shortest paths (Dijkstra)
 	int termination_vertex; // an optional termination vertex for which the shortest path will be reported
-	double stretch; // spaner graph stretch factor
+	double stretch;		// spaner graph stretch factor	
+	double yardstick;	// max. size of edge for edge subdivisions
 
 	program_options::options_description desc("Allowed options");
 	desc.add_options()
@@ -117,6 +118,7 @@ int main(int argc, char** argv)
 		("start_vertex,s", program_options::value<int>(&start_vertex)->default_value(0), "shortest path start vertex number")
 		("termination_vertex,t", program_options::value<int>(&termination_vertex)->default_value(-1), "shortest path termination vertex number (-1==none)")
 		("spanner_stretch,x", program_options::value<double>(&stretch)->default_value(0.0), "spanner graph stretch factor")
+		("yardstick,y", program_options::value<double>(&yardstick)->default_value(0.0), "interval length for interval scheme (0: do not subdivide edges)")
 		("input-mesh", program_options::value<std::string>(), "set input filename (tetgen 3D mesh files wo extension)")
 		;
 
@@ -124,10 +126,21 @@ int main(int argc, char** argv)
 	positional_options.add("input-mesh", 1);
 
 	program_options::variables_map vm;
-	program_options::store(
-		program_options::command_line_parser(argc, argv).options(desc).positional(positional_options).run(), 
-		vm
-	);
+	try
+	{
+		program_options::store(
+			program_options::command_line_parser(argc, argv).options(desc).positional(positional_options).run(), 
+			vm
+		);
+	} 
+	catch (...)
+	{
+		// exceptions in cmd line parsing are aweful, but hapenned easily
+		std::cerr << "exception while parsing command line, exit." << std::endl;
+		std::cerr << desc << endl;
+		return EXIT_FAILURE;
+	}
+
 	program_options::notify(vm);
 
 	if (vm.count("help")) {
@@ -182,8 +195,8 @@ int main(int argc, char** argv)
 		}
 		else
 		{
-			create_steiner_graph_improved_spanner(graph, mesh);
-			std::cout << "create_steiner_graph_improved_spanner: " << t.seconds() << " s" << std::endl;
+			create_steiner_graph_improved_spanner(graph, mesh, stretch, yardstick );
+			std::cout << "create_steiner_graph_improved_spanner with stretch t=: " << stretch << " : " << t.seconds() << " s" << std::endl;
 		}
 	}
 	
