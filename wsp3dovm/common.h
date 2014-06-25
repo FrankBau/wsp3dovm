@@ -168,10 +168,20 @@ struct Mesh : public OpenVolumeMesh::GeometricPolyhedralMeshV3d
 	}
 };
 
+static inline double norm(const Vector& v)
+{
+	return sqrt(v.sqrnorm());
+}
+
 static inline double norm(const Point& p, const Point& q)
 {
-	Vector diff = p - q;
-	return sqrt(diff.sqrnorm());
+	return norm(p-q);
+}
+
+static inline double length(const Mesh& mesh, const Edge& e)
+{
+	// hu, ugly that we need the mesh here...
+	return norm(mesh.vertex(e.from_vertex()), mesh.vertex(e.to_vertex()));
 }
 
 #endif

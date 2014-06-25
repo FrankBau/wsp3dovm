@@ -265,6 +265,35 @@ void create_surface_steiner_points(Graph &graph, Mesh &mesh)
 // see http://people.scs.carleton.ca/~michiel/greedyspanner.pdf
 // and http://cg.scs.carleton.ca/~mfarshi/pub/ESA05.pdf
 
+bool PointInTriangle(const Point& P, const Point& A, const Point& B, const Point& C)
+{
+	// use barycentric coordinates
+	// see http://math.stackexchange.com/questions/4322/check-whether-a-point-is-within-a-3d-triangle
+
+	Vector u = B - A;
+	Vector v = C - A;
+	Vector w = P - A;
+
+	Vector vCrossW = cross(v, w);
+	Vector vCrossU = cross(v, u);
+
+	// Test sign of r
+	if (dot(vCrossW, vCrossU) < epsilon)
+		return false;
+
+	Vector uCrossW = cross(u, w);
+	Vector uCrossV = cross(u, v);
+
+	// Test sign of t
+	if (dot(uCrossW, uCrossV) < epsilon)
+		return false;
+
+	double denom = norm(uCrossV);
+	double r = norm(vCrossW) / denom;
+	double t = norm(uCrossW) / denom;
+
+	return (r + t <= 1 - epsilon);
+}
 
 // this will add an edge (u,v) only if
 // 1 no such edge exists in graph, or
@@ -289,12 +318,118 @@ void add_edge(Graph &graph, GraphNode_descriptor u, GraphNode_descriptor v, Weig
 	}
 }
 
-void create_steiner_graph_nodes_intervall_scheme(Graph &graph, Mesh &mesh, double yardstick)
+struct edge_length_less_than
 {
+	edge_length_less_than(const Mesh& mesh) : mesh(mesh) {}
 
-	mesh._vertexNode.resize(mesh.n_vertices());
+	const Mesh& mesh;
 
+	inline bool operator() (const Edge& e1, const Edge& e2)
+	{
+		return (length(mesh, e1) < length(mesh, e2));
+	}
+};
+
+void create_steiner_graph_nodes_interval_scheme_for_face(Graph &graph, Mesh &mesh, double yardstick, FaceHandle fh)
+{
+	//HalfFaceHandle hfh = Kernel::halfface_handle(fh, 0); // pick an arbitrary orientation
+
+	Face f = mesh.face(fh);
+	std::vector<HalfEdgeHandle> hehs = f.halfedges();
+
+	std::vector<Edge> es;
+	for (auto heh : hehs)
+	{
+		es.push_back(mesh.halfedge(heh));
+	}
+
+	std::sort(es.begin(), es.end(), edge_length_less_than(mesh) );
+
+	// now, es[2] is the largest edge and es[1] the second larges of the triangle
+	// we now find out the point relation
+	// finally we want u,v,w arrange such that (u,v)  is the largest edge and (v,w) the second largest
+	VertexHandle u;
+	VertexHandle v;
+	VertexHandle w;
+
+	// this looks old-fashined to me, perherps, the above sort should be incorporated here
+	if (es[2].from_vertex() == es[1].from_vertex())
+	{
+		u = es[2].to_vertex();
+		v = es[2].from_vertex();
+		w = es[1].to_vertex();
+	}
+	else if (es[2].from_vertex() == es[1].to_vertex())
+	{
+		u = es[2].to_vertex();
+		v = es[2].from_vertex();
+		w = es[1].from_vertex();
+	}
+	else if (es[2].to_vertex() == es[1].from_vertex())
+	{
+		u = es[2].from_vertex();
+		v = es[2].to_vertex();
+		w = es[1].to_vertex();
+	}
+	else if (es[2].to_vertex() == es[1].to_vertex())
+	{
+		u = es[2].from_vertex();
+		v = es[2].to_vertex();
+		w = es[1].from_vertex();
+	}
+	else
+	{
+		assert(0 && "create_steiner_graph_nodes_interval_scheme_for_face: unexpected vertex odering");
+	}
+
+	Point pu = mesh.vertex(u);
+	Point pv = mesh.vertex(v);
+	Point pw = mesh.vertex(w);
+
+	double length_uv = length(mesh, Edge(u, v));
+	double length_vw = length(mesh, Edge(v, w));
+	double length_wu = length(mesh, Edge(w, u));
+
+	assert(length_uv >= length_vw);
+	assert(length_vw >= length_wu);
+
+	// let h be orthogonal to (u,v) in plane u,v,w by using Gram-Schmidt, 
+	// see www.geometrictools.com/Documentation/OrthonormalSets.pdf
+	Vector vu_direction = pu - pv;
+	Vector vu_normed = vu_direction / length_uv;
+	Vector vw_direction = pw - pv;
+
+	// subtract projection of vw_direction onto vu_normed
+	Vector h = vw_direction - dot(vu_normed, vw_direction) * vu_normed;
+	double length_h = norm(h);
+	Vector h_normed = h / length_h;
+
+	int i_max = static_cast<int>(trunc(length_uv / yardstick));
+	int j_max = static_cast<int>(trunc(length_h / yardstick));
+
+	Vector di = vu_normed * yardstick;
+	Vector dj = h_normed * yardstick;
+
+	for( int i=1; i<=i_max; ++i)
+	{
+		for( int j=1; j<=j_max; ++j)
+		{
+			Point p = pv + static_cast<double>(i)*di + static_cast<double>(j)*dj;
+			
+			if (PointInTriangle(p,pu,pv,pw))
+			{
+				GraphNode_descriptor node = boost::add_vertex(graph);
+				graph[node].point = p;
+				mesh.f_nodes(fh).push_back(node);
+			}
+		}
+	}
+}
+
+void create_steiner_graph_nodes_interval_scheme(Graph &graph, Mesh &mesh, double yardstick)
+{
 	// create a graph node for each mesh vertex
+	mesh._vertexNode.resize(mesh.n_vertices());
 	for (auto it = mesh.vertices_begin(); it != mesh.vertices_end(); ++it)
 	{
 		VertexHandle vh = *it;
@@ -303,7 +438,6 @@ void create_steiner_graph_nodes_intervall_scheme(Graph &graph, Mesh &mesh, doubl
 		graph[node].point = mesh.vertex(vh);
 		mesh.v_node(vh) = node;
 	}
-
 
 	// create steiner graph nodes for each mesh edge
 	size_t total_edge_nodes = 0;
@@ -321,7 +455,7 @@ void create_steiner_graph_nodes_intervall_scheme(Graph &graph, Mesh &mesh, doubl
 			double edge_length = trunc(norm(pu, pv));
 			Vector edge_direction = pv - pu;
 
-			int k = static_cast<int>(edge_length / yardstick);
+			int k = static_cast<int>(trunc(edge_length / yardstick));
 
 			if (k > 0)
 			{
@@ -345,16 +479,17 @@ void create_steiner_graph_nodes_intervall_scheme(Graph &graph, Mesh &mesh, doubl
 	std::cout << "avg. number of steiner nodes on edges created: " << static_cast<double>(total_edge_nodes) / mesh.n_edges() << std::endl;
 
 	// create a steiner graph nodes for each mesh face
+	size_t total_face_nodes = 0;
 	mesh._faceNodes.resize(mesh.n_faces());
-	for (auto it = mesh.faces_begin(); it != mesh.faces_end(); ++it)
+	if (yardstick > 0)
 	{
-		FaceHandle fh = *it;
-		if (fh.is_valid())
+		for (auto it = mesh.faces_begin(); it != mesh.faces_end(); ++it)
 		{
-			GraphNode_descriptor node = boost::add_vertex(graph);
-			graph[node].point = mesh.barycenter(fh);
-			mesh.f_nodes(fh).push_back(node);
+			FaceHandle fh = *it;
+			create_steiner_graph_nodes_interval_scheme_for_face(graph, mesh, yardstick, fh);
+			total_face_nodes += mesh.f_nodes(fh).size();
 		}
+		std::cout << "avg. number of steiner nodes on faces created: " << static_cast<double>(total_face_nodes) / mesh.n_faces() << std::endl;
 	}
 }
 
@@ -446,7 +581,30 @@ struct SpannerGraphEdge
 // yardstick: interval length for edge subdivisions
 void create_steiner_graph_improved_spanner(Graph &graph, Mesh &mesh, double stretch, double yardstick)
 {
-	create_steiner_graph_nodes_intervall_scheme(graph, mesh, yardstick);
+	create_steiner_graph_nodes_interval_scheme(graph, mesh, yardstick);
+
+	if (stretch == 0)
+	{	// no stretch allowed, build complete graph (faster)
+
+		std::cout << "adding graph edges (complete subgraphs)" << std::endl;
+
+		for (auto it = mesh.cells_begin(); it != mesh.cells_end(); ++it)
+		{
+			CellHandle ch = *it;
+			std::vector<GraphNode_descriptor> nodes = cell_nodes(graph, mesh, ch);
+
+			for (auto nit1 = nodes.begin(); nit1 != nodes.end(); ++nit1)
+			{
+				for (auto nit2 = nit1 + 1; nit2 != nodes.end(); ++nit2)
+				{
+					add_edge(graph, *nit1, *nit2, mesh.weight(ch));
+				}
+			}
+		}
+		return;
+	}
+
+	std::cout << "adding graph edges (spanner subgraphs)" << std::endl;
 
 	for (auto it = mesh.cells_begin(); it != mesh.cells_end(); ++it)
 	{
@@ -472,7 +630,7 @@ void create_steiner_graph_improved_spanner(Graph &graph, Mesh &mesh, double stre
 			for (auto v = u+1; v != vit.second; ++v)
 			{
 				double length = norm(graph[spanner[*u].original_node].point, graph[spanner[*v].original_node].point);
-				assert(length > 0);
+//				assert(length > 0);
 				potential_edges.push_back(SpannerGraphEdge(*u, *v, length));
 			}
 		}
