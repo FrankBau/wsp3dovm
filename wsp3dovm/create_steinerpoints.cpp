@@ -476,7 +476,7 @@ void create_steiner_graph_nodes_interval_scheme(Graph &graph, Mesh &mesh, double
 			}
 		}
 	}
-	std::cout << "avg. number of steiner nodes on edges created: " << static_cast<double>(total_edge_nodes) / mesh.n_edges() << std::endl;
+	//std::cout << "avg. number of steiner nodes on edges created: " << static_cast<double>(total_edge_nodes) / mesh.n_edges() << std::endl;
 
 	// create a steiner graph nodes for each mesh face
 	size_t total_face_nodes = 0;
@@ -489,7 +489,7 @@ void create_steiner_graph_nodes_interval_scheme(Graph &graph, Mesh &mesh, double
 			create_steiner_graph_nodes_interval_scheme_for_face(graph, mesh, yardstick, fh);
 			total_face_nodes += mesh.f_nodes(fh).size();
 		}
-		std::cout << "avg. number of steiner nodes on faces created: " << static_cast<double>(total_face_nodes) / mesh.n_faces() << std::endl;
+		//std::cout << "avg. number of steiner nodes on faces created: " << static_cast<double>(total_face_nodes) / mesh.n_faces() << std::endl;
 	}
 }
 

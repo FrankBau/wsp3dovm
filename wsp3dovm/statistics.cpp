@@ -30,7 +30,7 @@ void dump_mesh(Mesh &mesh)
 	}
 }
 
-void print_edge_statistics(Mesh &mesh)
+void print_edge_statistics(const Mesh &mesh)
 {
 	double min_lenght = std::numeric_limits<double>::max();
 	double max_lenght = 0;
@@ -59,8 +59,8 @@ void print_edge_statistics(Mesh &mesh)
 		++num_edges;
 	}
 
-	std::cout << "min edge length: " << min_lenght << " edge from/to vertex: " << mesh.edge(min_eh) << std::endl;
-	std::cout << "max edge length: " << max_lenght << " edge from/to vertex: " << mesh.edge(max_eh) << std::endl;
+	std::cout << "min edge length: " << min_lenght << " edge (from,to) vertex: " << mesh.edge(min_eh) << std::endl;
+	std::cout << "max edge length: " << max_lenght << " edge (from,to) vertex: " << mesh.edge(max_eh) << std::endl;
 
 	const int num_bins = 10;
 	int histo[num_bins];
@@ -102,7 +102,7 @@ double tetrahedral_volume(Point& a, Point& b, Point& c, Point& d )
 	return fabs(det / 6.0);
 }
 
-double tetrahedral_volume(Mesh &mesh, CellHandle ch)
+double tetrahedral_volume(const Mesh &mesh, CellHandle ch)
 {
 	auto v_it = mesh.cv_iter(ch);
 	Point p1 = mesh.vertex(*v_it); ++v_it;
@@ -116,7 +116,7 @@ double tetrahedral_volume(Mesh &mesh, CellHandle ch)
 	return volume;
 }
 
-void print_volume_statistics(Mesh &mesh)
+void print_volume_statistics(const Mesh &mesh)
 {
 	double min_volume = std::numeric_limits<double>::max();
 	double max_volume = std::numeric_limits<double>::min();
@@ -172,7 +172,7 @@ void print_volume_statistics(Mesh &mesh)
 	}
 }
 
-void print_general_statistics(Mesh &mesh)
+void print_general_statistics(const Mesh &mesh)
 {
 // those moved to print_memory_statistics which needs access to protected members
 //	std::cout << "vertices: " << mesh.n_vertices() << std::endl;
@@ -182,9 +182,81 @@ void print_general_statistics(Mesh &mesh)
 	std::cout << "genus   : " << mesh.genus() << std::endl;
 } 
 
-void print_mesh_statistics(Mesh &mesh)
+void print_mesh_statistics(const Mesh &mesh)
 {
 	print_general_statistics(mesh);
 	print_edge_statistics(mesh);
 	print_volume_statistics(mesh);
+}
+
+void print_steiner_point_face_statistics(const Mesh &mesh)
+{
+	size_t min_f_nodes = std::numeric_limits<size_t>::max();
+	size_t max_f_nodes = std::numeric_limits<size_t>::min();
+	size_t total_f_nodes = 0;
+
+	int min_face = -1;
+	int max_face = -1;
+
+	for (auto fit = mesh.faces_begin(); fit != mesh.faces_end(); ++fit)
+	{
+		FaceHandle fh = *fit;
+		size_t f_nodes = mesh.f_nodes(fh).size();
+		total_f_nodes += f_nodes;
+		if (f_nodes < min_f_nodes)
+		{
+			min_f_nodes = f_nodes;
+			min_face = fh.idx();
+		}
+		if (f_nodes > max_f_nodes)
+		{
+			max_f_nodes = f_nodes;
+			max_face = fh.idx();
+		}
+	}
+
+	double avg_f_nodes = static_cast<double>(total_f_nodes) / mesh.n_faces();
+
+	std::cout << "min steiner nodes on a face: " << min_f_nodes << " face: " << min_face << std::endl;
+	std::cout << "avg steiner nodes on a face: " << avg_f_nodes << std::endl;
+	std::cout << "max steiner nodes on a face: " << max_f_nodes << " face: " << max_face << std::endl;
+}
+
+void print_steiner_point_edge_statistics(const Mesh &mesh)
+{
+	size_t min_e_nodes = std::numeric_limits<size_t>::max();
+	size_t max_e_nodes = std::numeric_limits<size_t>::min();
+	size_t total_e_nodes = 0;
+
+	EdgeHandle min_eh = Kernel::InvalidEdgeHandle;	
+	EdgeHandle max_eh = Kernel::InvalidEdgeHandle;
+
+	for (auto eit = mesh.edges_begin(); eit != mesh.edges_end(); ++eit)
+	{
+		EdgeHandle eh = *eit;
+		size_t e_nodes = mesh.e_nodes(eh).size();
+		total_e_nodes += e_nodes;
+		if (e_nodes < min_e_nodes)
+		{
+			min_e_nodes = e_nodes;
+			min_eh = eh;
+		}
+		if (e_nodes > max_e_nodes)
+		{
+			max_e_nodes = e_nodes;
+			max_eh = eh;
+		}
+	}
+
+	double avg_e_nodes = static_cast<double>(total_e_nodes) / mesh.n_edges();
+
+	std::cout << "min steiner nodes on a edge: " << min_e_nodes << " edge (from,to) vertex: " << mesh.edge(min_eh) << std::endl;
+	std::cout << "avg steiner nodes on a edge: " << avg_e_nodes << std::endl;
+	std::cout << "max steiner nodes on a edge: " << max_e_nodes << " edge (from,to) vertex: " << mesh.edge(max_eh) << std::endl;
+}
+
+void print_steiner_point_statistics(const Mesh &mesh)
+{
+	print_steiner_point_edge_statistics(mesh);
+	print_steiner_point_face_statistics(mesh);
 }

@@ -120,8 +120,13 @@ struct Mesh : public OpenVolumeMesh::GeometricPolyhedralMeshV3d
 	double& weight(FaceHandle fh) { return _faceWeight[fh.idx()]; }
 	double& weight(EdgeHandle eh) { return _edgeWeight[eh.idx()]; }
 
+	const std::vector<GraphNode_descriptor>& f_nodes(FaceHandle fh) const { return _faceNodes[fh.idx()]; }
 	std::vector<GraphNode_descriptor>& f_nodes(FaceHandle fh) { return _faceNodes[fh.idx()]; }
+
+	const std::vector<GraphNode_descriptor>& e_nodes(EdgeHandle eh) const { return _edgeNodes[eh.idx()]; }
 	std::vector<GraphNode_descriptor>& e_nodes(EdgeHandle eh) { return _edgeNodes[eh.idx()]; }
+
+	const GraphNode_descriptor& v_node(VertexHandle vh) const { return _vertexNode[vh.idx()]; }
 	GraphNode_descriptor& v_node(VertexHandle vh) { return _vertexNode[vh.idx()]; }
 
 	void print_memory_statistics()
