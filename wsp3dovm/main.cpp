@@ -361,7 +361,7 @@ int main(int argc, char** argv)
 
 		for (int bin = 0; bin < num_bins; ++bin)
 		{
-			std::cout << "approx. ratio histo: " << histo_min + bin*(histo_max - histo_min) << " : " << histo[bin] << std::endl;
+			std::cout << "approx. ratio histo: " << histo_min + bin * ((histo_max - histo_min) / num_bins) << " : " << histo[bin] << std::endl;
 		}
 	}
 	
