@@ -99,6 +99,63 @@ void calc_edge_weights(Mesh &mesh)
 	}
 }
 
+double run_single_dijkstra(const Graph& graph, int s_node, int t_node, bool dump_tree = false, bool dump_path = false, filesystem::path basename = "out")
+{
+	// the distances are temporary, so we choose an external property for that
+	std::vector<double> distance(num_vertices(graph));
+	std::vector<GraphNode_descriptor> predecessor(num_vertices(graph));
+
+	boost::dijkstra_shortest_paths
+		(
+		graph,
+		s_node,
+		boost::weight_map(get(&GraphEdge::weight, graph)).
+		distance_map(boost::make_iterator_property_map(distance.begin(), get(boost::vertex_index, graph))).
+		predecessor_map(boost::make_iterator_property_map(predecessor.begin(), get(boost::vertex_index, graph))).
+		distance_inf(std::numeric_limits<double>::infinity())
+		);
+
+	double euclidean_distance = norm(graph[s_node].point, graph[t_node].point);
+	double approx_distance = distance[t_node];
+	double approx_ratio = approx_distance / euclidean_distance;
+
+	if(dump_tree)
+	{
+		timer<high_resolution_clock> t;
+
+		stringstream extension;
+		extension << "_wsp_tree_s" << s_node << ".vtk";
+
+		write_shortest_path_tree_vtk(
+			graph, 
+			predecessor, 
+			distance, 
+			basename.filename().replace_extension(extension.str()).string()
+		);
+
+		std::cout << "write_shortest_path_tree_vtk: " << t.seconds() << " s" << std::endl;
+	}
+
+	if (dump_path)
+	{
+		timer<high_resolution_clock> t;
+
+		stringstream extension;
+		extension << "_wsp_path_s" << s_node << "_" << t_node << ".vtk";
+
+		write_shortest_path_to_vtk(
+			graph,
+			t_node,
+			predecessor,
+			distance,
+			basename.filename().replace_extension(extension.str()).string()
+			);
+		std::cout << "write_shortest_path_to_vtk: " << t.seconds() << " s" << std::endl;
+	}
+
+	return approx_ratio;
+}
+
 int main(int argc, char** argv)
 {
 	timer<high_resolution_clock> total_time;
@@ -110,8 +167,7 @@ int main(int argc, char** argv)
 	int start_vertex;		// for single source shortest paths (Dijkstra)
 	int termination_vertex; // an optional termination vertex for which the shortest path will be reported
 
-	int num_start_vertices; // number of start vertices to be used (with incremented indices starting at start_vertex)
-	int num_term_vertices;	// number of termination vertices to be used (with incremented indices starting at term_vertex)
+	int num_random_s_t_vertices; // number of randomly generated s and t vertex pairs
 
 	double stretch;		// spaner graph stretch factor	
 	double yardstick;	// max. size of edge for edge subdivisions
@@ -120,9 +176,8 @@ int main(int argc, char** argv)
 	desc.add_options()
 		("help,h", "produce help message")
 		("start_vertex,s", program_options::value<int>(&start_vertex)->default_value(0), "shortest path start vertex number")
-		("num_start_vertices,S", program_options::value<int>(&num_start_vertices)->default_value(1), "number of start vertices to be used (with incremented indices starting at start_vertex)")
 		("termination_vertex,t", program_options::value<int>(&termination_vertex)->default_value(-1), "shortest path termination vertex number (-1==none)")
-		("num_termination_vertices,T", program_options::value<int>(&num_term_vertices)->default_value(1), "number of termination vertices to be used (with incremented indices starting at term_vertex)")
+		("random_s_t_vertices,r", program_options::value<int>(&num_random_s_t_vertices)->default_value(0), "number of randomly generated s and t vertex pairs")
 		("spanner_stretch,x", program_options::value<double>(&stretch)->default_value(0.0), "spanner graph stretch factor")
 		("yardstick,y", program_options::value<double>(&yardstick)->default_value(0.0), "interval length for interval scheme (0: do not subdivide edges)")
 		("input-mesh", program_options::value<std::string>(), "set input filename (tetgen 3D mesh files wo extension)")
@@ -180,6 +235,7 @@ int main(int argc, char** argv)
 	mesh.print_memory_statistics();
 	print_mesh_statistics(mesh);
 
+	if(0)
 	{
 		timer<high_resolution_clock> t;
 		write_vtk(mesh, inputfilename.filename().replace_extension(".vtk").string() );
@@ -218,78 +274,52 @@ int main(int argc, char** argv)
 		std::cout << "write_graph_vtk: " << t.seconds() << " s" << std::endl;
 	}
 
-	std::cout << "running shortest paths calculations for " << num_start_vertices << " start and  " << num_term_vertices << " termination vertices" << std::endl;
-
+	if (start_vertex >= 0 && termination_vertex >= 0)
 	{
+		std::cout << "running single dijkstra for s=" << start_vertex << " and t=" << termination_vertex << std::endl;
+		
+		double approx_ratio = run_single_dijkstra(graph, start_vertex, termination_vertex);
+
+		std::cout << "shortest path approximation ratio: " << approx_ratio << std::endl;
+	}
+
+	if (num_random_s_t_vertices > 0)
+	{
+		std::cout << "running " << num_random_s_t_vertices << " dijkstra for random vertex pairs" << std::endl;
+
+		mt19937 gen;
+		boost::uniform_int<> range(0, boost::num_vertices(graph)-1); // closed interval (including max) 
+		boost::variate_generator<boost::mt19937&, boost::uniform_int<> > next_random(gen, range);
+
 		double min_approx_ratio = std::numeric_limits<double>::max();
 		double max_approx_ratio = std::numeric_limits<double>::min();
 		double sum_approx_ratio = 0;
 
 		timer<high_resolution_clock> t;
 
-		for (int s = start_vertex; s < start_vertex + num_start_vertices; ++s)
+		for (int i = 0; i < num_random_s_t_vertices; ++i)
 		{
-			// the distances are temporary, so we choose an external property for that
-			std::vector<double> distance(num_vertices(graph));
-			std::vector<GraphNode_descriptor> predecessor(num_vertices(graph));
+			int s = next_random();
+			int t = next_random();
 
-			boost::dijkstra_shortest_paths
-				(
-				graph,
-				s,
-				boost::weight_map(get(&GraphEdge::weight, graph)).
-				distance_map(boost::make_iterator_property_map(distance.begin(), get(boost::vertex_index, graph))).
-				predecessor_map(boost::make_iterator_property_map(predecessor.begin(), get(boost::vertex_index, graph))).
-				distance_inf(std::numeric_limits<double>::infinity())
-				);
+			while (s==t) // for s==t, the approx. ratio cannot be calculated
+				t = next_random();
 
-			if (termination_vertex > 0)
-			{
-				for (int t = termination_vertex; t < termination_vertex + num_term_vertices; ++t)
-				{
-					double euclidean_distance = norm(graph[s].point, graph[t].point);
-					double approx_distance = distance[t];
-					double approx_ratio = approx_distance / euclidean_distance;
+			double approx_ratio = run_single_dijkstra(graph, s, t );
 
-					//std::cout << "approx. distance from " << s << " to " << t << " is " << 100 * approx_ratio << "% of true euclidean distance" << std::endl;
-
-					min_approx_ratio = min(approx_ratio, min_approx_ratio);
-					max_approx_ratio = max(approx_ratio, max_approx_ratio);
-					sum_approx_ratio += approx_ratio;
-				}
-			}
+			min_approx_ratio = min(min_approx_ratio, approx_ratio);
+			max_approx_ratio = max(max_approx_ratio, approx_ratio);
+			sum_approx_ratio += approx_ratio;
 		}
 
-		double avg_approx_ratio = sum_approx_ratio / (num_start_vertices*num_term_vertices);
+		double avg_approx_ratio = sum_approx_ratio / num_random_s_t_vertices;
 
-		std::cout << "total time for " << num_start_vertices << " dijkstra_shortest_paths: " << t.seconds() << " s" << std::endl;
+		std::cout << "total time for " << num_random_s_t_vertices << " dijkstra_shortest_paths: " << t.seconds() << " s" << std::endl;
 		std::cout << "best  shortest path approximation ratio: " << min_approx_ratio << std::endl;
 		std::cout << "avg.  shortest path approximation ratio: " << avg_approx_ratio << std::endl;
 		std::cout << "worst shortest path approximation ratio: " << max_approx_ratio << std::endl;
 	}
 	
-#if 0
-	{
-		timer<high_resolution_clock> t;
-		write_shortest_path_tree_vtk(graph, predecessor, distance, inputfilename.filename().replace_extension("_wsp_tree.vtk").string());
-		std::cout << "write_shortest_path_tree_vtk: " << t.seconds() << " s" << std::endl;
-	}
-
-	if (termination_vertex > 0)
-	{
-		timer<high_resolution_clock> t;
-
-		write_shortest_path_to_vtk(
-			graph, 
-			termination_vertex,
-			predecessor, 
-			distance, 
-			inputfilename.filename().replace_extension("_wsp_max.vtk").string()
-		);
-		std::cout << "write_shortest_path_to_vtk: " << t.seconds() << " s" << std::endl;
-	}
-#endif
-
 	// write_graph_dot("graph.dot", graph);
 
 	std::cout << "This is the end, total time: " << total_time.seconds() << " s" << std::endl;

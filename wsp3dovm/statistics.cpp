@@ -30,6 +30,7 @@ void dump_mesh(Mesh &mesh)
 	}
 }
 
+
 void print_edge_statistics(const Mesh &mesh)
 {
 	double min_lenght = std::numeric_limits<double>::max();
@@ -191,9 +192,9 @@ void print_mesh_statistics(const Mesh &mesh)
 
 void print_steiner_point_face_statistics(const Mesh &mesh)
 {
-	size_t min_f_nodes = std::numeric_limits<size_t>::max();
-	size_t max_f_nodes = std::numeric_limits<size_t>::min();
-	size_t total_f_nodes = 0;
+	int min_f_nodes = std::numeric_limits<int>::max();
+	int max_f_nodes = std::numeric_limits<int>::min();
+	int total_f_nodes = 0;
 
 	int min_face = -1;
 	int max_face = -1;
@@ -201,7 +202,7 @@ void print_steiner_point_face_statistics(const Mesh &mesh)
 	for (auto fit = mesh.faces_begin(); fit != mesh.faces_end(); ++fit)
 	{
 		FaceHandle fh = *fit;
-		size_t f_nodes = mesh.f_nodes(fh).size();
+		int f_nodes = mesh.f_nodes(fh).size();
 		total_f_nodes += f_nodes;
 		if (f_nodes < min_f_nodes)
 		{
@@ -220,13 +221,36 @@ void print_steiner_point_face_statistics(const Mesh &mesh)
 	std::cout << "min steiner nodes on a face: " << min_f_nodes << " face: " << min_face << std::endl;
 	std::cout << "avg steiner nodes on a face: " << avg_f_nodes << std::endl;
 	std::cout << "max steiner nodes on a face: " << max_f_nodes << " face: " << max_face << std::endl;
+
+	if (min_f_nodes == max_f_nodes)
+		return;
+
+	const int num_bins = 10;
+	int histo[num_bins];
+	for (int bin = 0; bin < num_bins; ++bin)
+		histo[bin] = 0;
+
+	for (auto fit = mesh.faces_begin(); fit != mesh.faces_end(); ++fit)
+	{
+		FaceHandle fh = *fit;
+		int f_nodes = mesh.f_nodes(fh).size();
+		int bin = (int)(num_bins * (f_nodes - min_f_nodes) / (max_f_nodes - min_f_nodes));
+		if (bin == num_bins)
+			--bin;
+		++histo[bin];
+	}
+
+	for (int bin = 0; bin < num_bins; ++bin)
+	{
+		std::cout << "steiner nodes on a face histogram bin " << bin << " : " << histo[bin] << std::endl;
+	}
 }
 
 void print_steiner_point_edge_statistics(const Mesh &mesh)
 {
-	size_t min_e_nodes = std::numeric_limits<size_t>::max();
-	size_t max_e_nodes = std::numeric_limits<size_t>::min();
-	size_t total_e_nodes = 0;
+	int min_e_nodes = std::numeric_limits<int>::max();
+	int max_e_nodes = std::numeric_limits<int>::min();
+	int total_e_nodes = 0;
 
 	EdgeHandle min_eh = Kernel::InvalidEdgeHandle;	
 	EdgeHandle max_eh = Kernel::InvalidEdgeHandle;
@@ -234,7 +258,7 @@ void print_steiner_point_edge_statistics(const Mesh &mesh)
 	for (auto eit = mesh.edges_begin(); eit != mesh.edges_end(); ++eit)
 	{
 		EdgeHandle eh = *eit;
-		size_t e_nodes = mesh.e_nodes(eh).size();
+		int e_nodes = mesh.e_nodes(eh).size();
 		total_e_nodes += e_nodes;
 		if (e_nodes < min_e_nodes)
 		{
@@ -253,6 +277,29 @@ void print_steiner_point_edge_statistics(const Mesh &mesh)
 	std::cout << "min steiner nodes on a edge: " << min_e_nodes << " edge (from,to) vertex: " << mesh.edge(min_eh) << std::endl;
 	std::cout << "avg steiner nodes on a edge: " << avg_e_nodes << std::endl;
 	std::cout << "max steiner nodes on a edge: " << max_e_nodes << " edge (from,to) vertex: " << mesh.edge(max_eh) << std::endl;
+
+	if (min_e_nodes == max_e_nodes)
+		return;
+
+	const int num_bins = 10;
+	int histo[num_bins];
+	for (int bin = 0; bin < num_bins; ++bin)
+		histo[bin] = 0;
+
+	for (auto eit = mesh.edges_begin(); eit != mesh.edges_end(); ++eit)
+	{
+		EdgeHandle eh = *eit;
+		size_t e_nodes = mesh.e_nodes(eh).size();
+		int bin = (int)(num_bins * (e_nodes - min_e_nodes) / (max_e_nodes - min_e_nodes));
+		if (bin == num_bins)
+			--bin;
+		++histo[bin];
+	}
+
+	for (int bin = 0; bin < num_bins; ++bin)
+	{
+		std::cout << "steiner nodes on a edge histogram bin " << bin << " : " << histo[bin] << std::endl;
+	}
 }
 
 void print_steiner_point_statistics(const Mesh &mesh)

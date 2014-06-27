@@ -2,7 +2,7 @@
 
 void write_shortest_path_tree_vtk
 (
-	Graph &graph,
+	const Graph &graph,
 	std::vector<GraphNode_descriptor>& predecessors,
 	std::vector<double>& distances,
 	std::string filename
@@ -76,7 +76,7 @@ int hops(std::vector<GraphNode_descriptor> &predecessors, GraphNode_descriptor t
 
 void write_shortest_path_to_vtk
 (
-	Graph &graph,
+	const Graph &graph,
 	GraphNode_descriptor t,
 	std::vector<GraphNode_descriptor>& predecessors,
 	std::vector<double>& distances,
@@ -146,7 +146,7 @@ void write_shortest_path_to_vtk
 	file << "\n";
 }
 
-void write_vtk(Mesh &mesh, std::string filename)
+void write_vtk(const Mesh &mesh, std::string filename)
 {
 	std::cout << "write_vtk " << filename << std::endl;
 	std::ofstream file(filename, std::ios::trunc);
@@ -230,7 +230,7 @@ void write_vtk(Mesh &mesh, std::string filename)
 
 void write_graph_vtk
 (
-Graph &graph,
+const Graph &graph,
 std::string filename
 )
 {

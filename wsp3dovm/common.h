@@ -116,8 +116,13 @@ struct Mesh : public OpenVolumeMesh::GeometricPolyhedralMeshV3d
 	std::vector<std::vector<GraphNode_descriptor>> _edgeNodes;
 	std::vector<GraphNode_descriptor> _vertexNode; // only one per vertex
 
+	const double& weight(CellHandle ch) const { return _cellWeight[ch.idx()]; }
 	double& weight(CellHandle ch) { return _cellWeight[ch.idx()]; }
+
+	const double& weight(FaceHandle fh) const { return _faceWeight[fh.idx()]; }
 	double& weight(FaceHandle fh) { return _faceWeight[fh.idx()]; }
+
+	const double& weight(EdgeHandle eh) const { return _edgeWeight[eh.idx()]; }
 	double& weight(EdgeHandle eh) { return _edgeWeight[eh.idx()]; }
 
 	const std::vector<GraphNode_descriptor>& f_nodes(FaceHandle fh) const { return _faceNodes[fh.idx()]; }
