@@ -270,6 +270,9 @@ bool PointInTriangle(const Point& P, const Point& A, const Point& B, const Point
 	// use barycentric coordinates
 	// see http://math.stackexchange.com/questions/4322/check-whether-a-point-is-within-a-3d-triangle
 
+	// first runs with a machine epsilon failed for models with tiny edge lengths.
+	// the <= and < relations shall eliminate all border points (because there is an extra run for creating steiner points on edges and for vertices)
+
 	Vector u = B - A;
 	Vector v = C - A;
 	Vector w = P - A;
@@ -278,21 +281,21 @@ bool PointInTriangle(const Point& P, const Point& A, const Point& B, const Point
 	Vector vCrossU = cross(v, u);
 
 	// Test sign of r
-	if (dot(vCrossW, vCrossU) < epsilon)
+	if (dot(vCrossW, vCrossU) <= 0)
 		return false;
 
 	Vector uCrossW = cross(u, w);
 	Vector uCrossV = cross(u, v);
 
 	// Test sign of t
-	if (dot(uCrossW, uCrossV) < epsilon)
+	if (dot(uCrossW, uCrossV) <= 0)
 		return false;
 
 	double denom = norm(uCrossV);
 	double r = norm(vCrossW) / denom;
 	double t = norm(uCrossW) / denom;
 
-	return (r + t <= 1 - epsilon);
+	return (r + t < 1);
 }
 
 // this will add an edge (u,v) only if

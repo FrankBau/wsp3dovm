@@ -257,8 +257,9 @@ int main(int argc, char** argv)
 		}
 		else
 		{
+			std::cout << "create_steiner_graph_improved_spanner with stretch " << stretch << " and interval " << yardstick << std::endl;
 			create_steiner_graph_improved_spanner(graph, mesh, stretch, yardstick );
-			std::cout << "create_steiner_graph_improved_spanner with stretch t=: " << stretch << " : " << t.seconds() << " s" << std::endl;
+			std::cout << "create_steiner_graph_improved_spanner took: " << t.seconds() << " s" << std::endl;
 		}
 	}
 	
