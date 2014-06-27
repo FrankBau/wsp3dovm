@@ -293,10 +293,21 @@ int main(int argc, char** argv)
 		boost::variate_generator<boost::mt19937&, boost::uniform_int<> > next_random(gen, range);
 
 		double min_approx_ratio = std::numeric_limits<double>::max();
+		int min_s;
+		int min_t;
 		double max_approx_ratio = std::numeric_limits<double>::min();
+		int max_s;
+		int max_t;
 		double sum_approx_ratio = 0;
 
 		timer<high_resolution_clock> t;
+
+		// create histogram with 10 bins in range 100% .. 110%
+		const int num_bins = 10;
+		double histo_min = 1.0;
+		double histo_max = 1.1;
+		double histo[num_bins];
+		std::fill(begin(histo), end(histo), 0);
 
 		for (int i = 0; i < num_random_s_t_vertices; ++i)
 		{
@@ -308,17 +319,45 @@ int main(int argc, char** argv)
 
 			double approx_ratio = run_single_dijkstra(graph, s, t );
 
-			min_approx_ratio = min(min_approx_ratio, approx_ratio);
-			max_approx_ratio = max(max_approx_ratio, approx_ratio);
+			int bin = (int)(num_bins * (approx_ratio - histo_min) / (histo_max - histo_min));
+			if (bin < 0)
+			{
+				std::cerr << "ERROR: dijkstra (" << s << "," << t << ") produced shorter path than Euclid would allow." << std::endl;
+			}
+			if (bin >= num_bins)
+			{
+				bin = num_bins - 1;
+			}
+			++histo[bin];
+
+			if (approx_ratio < min_approx_ratio)
+			{
+				min_approx_ratio = approx_ratio;
+				min_s = s;
+				min_t = t;
+			}
+
+			if (approx_ratio > max_approx_ratio)
+			{
+				max_approx_ratio = approx_ratio;
+				max_s = s;
+				max_t = t;
+			}
+
 			sum_approx_ratio += approx_ratio;
 		}
 
 		double avg_approx_ratio = sum_approx_ratio / num_random_s_t_vertices;
 
 		std::cout << "total time for " << num_random_s_t_vertices << " dijkstra_shortest_paths: " << t.seconds() << " s" << std::endl;
-		std::cout << "best  shortest path approximation ratio: " << min_approx_ratio << std::endl;
-		std::cout << "avg.  shortest path approximation ratio: " << avg_approx_ratio << std::endl;
-		std::cout << "worst shortest path approximation ratio: " << max_approx_ratio << std::endl;
+		std::cout << "min shortest path approximation ratio: " << min_approx_ratio << " s=" << min_s << " , t=" << min_t << std::endl;
+		std::cout << "avg shortest path approximation ratio: " << avg_approx_ratio << std::endl;
+		std::cout << "max shortest path approximation ratio: " << max_approx_ratio << " s=" << max_s << " , t=" << max_t << std::endl;
+
+		for (int bin = 0; bin < num_bins; ++bin)
+		{
+			std::cout << "approx. ratio histo: " << histo_min + bin*(histo_max - histo_min) << " : " << histo[bin] << std::endl;
+		}
 	}
 	
 	// write_graph_dot("graph.dot", graph);
