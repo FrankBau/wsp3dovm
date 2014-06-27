@@ -141,7 +141,7 @@ double run_single_dijkstra(const Graph& graph, int s_node, int t_node, bool dump
 		timer<high_resolution_clock> t;
 
 		stringstream extension;
-		extension << "_wsp_path_s" << s_node << "_" << t_node << ".vtk";
+		extension << "_wsp_path_s" << s_node << "_t" << t_node << ".vtk";
 
 		write_shortest_path_to_vtk(
 			graph,
@@ -166,6 +166,8 @@ int main(int argc, char** argv)
 
 	int start_vertex;		// for single source shortest paths (Dijkstra)
 	int termination_vertex; // an optional termination vertex for which the shortest path will be reported
+	bool write_mesh_vtk;
+	bool write_steiner_graph_vtk;
 
 	int num_random_s_t_vertices; // number of randomly generated s and t vertex pairs
 
@@ -180,6 +182,8 @@ int main(int argc, char** argv)
 		("random_s_t_vertices,r", program_options::value<int>(&num_random_s_t_vertices)->default_value(0), "number of randomly generated s and t vertex pairs")
 		("spanner_stretch,x", program_options::value<double>(&stretch)->default_value(0.0), "spanner graph stretch factor")
 		("yardstick,y", program_options::value<double>(&yardstick)->default_value(0.0), "interval length for interval scheme (0: do not subdivide edges)")
+		("write_mesh_vtk", program_options::value<bool>(&write_mesh_vtk)->default_value(false), "write input mesh as .vtk")
+		("write_steiner_graph_vtk", program_options::value<bool>(&write_steiner_graph_vtk)->default_value(false), "write steiner graph as .vtk")
 		("input-mesh", program_options::value<std::string>(), "set input filename (tetgen 3D mesh files wo extension)")
 		;
 
@@ -235,7 +239,7 @@ int main(int argc, char** argv)
 	mesh.print_memory_statistics();
 	print_mesh_statistics(mesh);
 
-	if(0)
+	if(write_mesh_vtk)
 	{
 		timer<high_resolution_clock> t;
 		write_vtk(mesh, inputfilename.filename().replace_extension(".vtk").string() );
@@ -268,18 +272,18 @@ int main(int argc, char** argv)
 	std::cout << "graph nodes: " << graph.m_vertices.size() << std::endl;
 	std::cout << "graph edges: " << graph.m_edges.size() << std::endl;
 
-	if(0)
+	if(write_steiner_graph_vtk)
 	{
 		timer<high_resolution_clock> t;
 		write_graph_vtk(graph, inputfilename.filename().replace_extension("_steiner_graph.vtk").string());
-		std::cout << "write_graph_vtk: " << t.seconds() << " s" << std::endl;
+		std::cout << "write_steiner_graph_vtk: " << t.seconds() << " s" << std::endl;
 	}
 
 	if (start_vertex >= 0 && termination_vertex >= 0)
 	{
 		std::cout << "running single dijkstra for s=" << start_vertex << " and t=" << termination_vertex << std::endl;
 		
-		double approx_ratio = run_single_dijkstra(graph, start_vertex, termination_vertex);
+		double approx_ratio = run_single_dijkstra(graph, start_vertex, termination_vertex, true, true, inputfilename.filename());
 
 		std::cout << "shortest path approximation ratio: " << approx_ratio << std::endl;
 	}
@@ -289,7 +293,8 @@ int main(int argc, char** argv)
 		std::cout << "running " << num_random_s_t_vertices << " dijkstra for random vertex pairs" << std::endl;
 
 		mt19937 gen;
-		boost::uniform_int<> range(0, boost::num_vertices(graph)-1); // closed interval (including max) 
+		// we take only original mesh vertices into account such that computations for different stener graphs keep comparable
+		boost::uniform_int<> range(0, mesh.n_vertices()-1); // closed interval (including max) 
 		boost::variate_generator<boost::mt19937&, boost::uniform_int<> > next_random(gen, range);
 
 		double min_approx_ratio = std::numeric_limits<double>::max();

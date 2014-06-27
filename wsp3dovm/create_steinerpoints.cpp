@@ -443,7 +443,6 @@ void create_steiner_graph_nodes_interval_scheme(Graph &graph, Mesh &mesh, double
 	}
 
 	// create steiner graph nodes for each mesh edge
-	size_t total_edge_nodes = 0;
 	mesh._edgeNodes.resize(mesh.n_edges());
 	if (yardstick > 0)
 	{
@@ -455,31 +454,21 @@ void create_steiner_graph_nodes_interval_scheme(Graph &graph, Mesh &mesh, double
 			Point pu = mesh.vertex(u);
 			Point pv = mesh.vertex(v);
 
-			double edge_length = trunc(norm(pu, pv));
+			double edge_length = norm(pu, pv);
 			Vector edge_direction = pv - pu;
 
 			int k = static_cast<int>(trunc(edge_length / yardstick));
-
-			if (k > 0)
+			// we subdivide each edge into equally sized segments of length <= yardstick
+			for (int i = 1; i < k; ++i)
 			{
-				int min_i = 1; // endpoint u is a vertex point  already inserted
-				int max_i = k - 1;
-				if (norm(pv, static_cast<double>(max_i)*edge_direction / k) < epsilon)
-				{	// last subdivision too close to the end
-					--max_i;
-				}
-				for (int i = min_i; i <= max_i; ++i)
-				{
-					GraphNode_descriptor node = boost::add_vertex(graph);
-					graph[node].point = pu + static_cast<double>(i)*edge_direction / k;
-					mesh.e_nodes(eh).push_back(node);
-					++total_edge_nodes;
-				}
-				//std::cout << "added " << k << " steiner points to edge (" << u << "," << v << ") of length " << edge_length << std::endl;
+				GraphNode_descriptor node = boost::add_vertex(graph);
+				Point p = pu + (static_cast<double>(i) / static_cast<double>(k)) * edge_direction;
+				graph[node].point = p;
+				mesh.e_nodes(eh).push_back(node);
 			}
+			//std::cout << "added " << k << " steiner points to edge (" << u << "," << v << ") of length " << edge_length << std::endl;
 		}
 	}
-	//std::cout << "avg. number of steiner nodes on edges created: " << static_cast<double>(total_edge_nodes) / mesh.n_edges() << std::endl;
 
 	// create a steiner graph nodes for each mesh face
 	size_t total_face_nodes = 0;
