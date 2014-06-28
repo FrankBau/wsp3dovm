@@ -128,6 +128,7 @@ double run_single_dijkstra(const Graph& graph, int s_node, int t_node, bool dump
 
 		write_shortest_path_tree_vtk(
 			graph, 
+			s_node,
 			predecessor, 
 			distance, 
 			basename.filename().replace_extension(extension.str()).string()
@@ -143,8 +144,9 @@ double run_single_dijkstra(const Graph& graph, int s_node, int t_node, bool dump
 		stringstream extension;
 		extension << "_wsp_path_s" << s_node << "_t" << t_node << ".vtk";
 
-		write_shortest_path_to_vtk(
+		write_shortest_path_from_to_vtk(
 			graph,
+			s_node, 
 			t_node,
 			predecessor,
 			distance,

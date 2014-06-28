@@ -7,15 +7,17 @@ void write_vtk(const Mesh &mesh, std::string filename);
 void write_shortest_path_tree_vtk
 (
 	const Graph &graph,
+	GraphNode_descriptor s, 
 	std::vector<GraphNode_descriptor>& predecessors,
 	std::vector<double>& distances,
 	std::string filename
 );
 
 // write a longest shortest path in vtk format
-void write_shortest_path_to_vtk
+void write_shortest_path_from_to_vtk
 (
 	const Graph &graph,
+	GraphNode_descriptor s,
 	GraphNode_descriptor t,
 	std::vector<GraphNode_descriptor>& predecessors,
 	std::vector<double>& distances,

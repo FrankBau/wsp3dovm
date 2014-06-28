@@ -3,6 +3,7 @@
 void write_shortest_path_tree_vtk
 (
 	const Graph &graph,
+	GraphNode_descriptor s,
 	std::vector<GraphNode_descriptor>& predecessors,
 	std::vector<double>& distances,
 	std::string filename
@@ -19,7 +20,7 @@ void write_shortest_path_tree_vtk
 
 	file <<
 		"# vtk DataFile Version 2.0\n"
-		"shortest path tree\n"
+		"shortest paths tree with root node " << graph[s].vertex.idx() << "\n"
 		"ASCII\n"
 		"DATASET UNSTRUCTURED_GRID\n";
 	file << "POINTS " << n << " double\n";
@@ -62,29 +63,33 @@ void write_shortest_path_tree_vtk
 	file << "\n";
 }
 
-int hops(std::vector<GraphNode_descriptor> &predecessors, GraphNode_descriptor t)
+int hops(std::vector<GraphNode_descriptor> &predecessors, GraphNode_descriptor s, GraphNode_descriptor t)
 {
 	int h = 0;
-	while (t != predecessors[t])
+	while (s != t)
 	{
 		t = predecessors[t];
 		++h;
 	}
-	assert(t == 0);
 	return h;
 }
 
-void write_shortest_path_to_vtk
+void write_shortest_path_from_to_vtk
 (
 	const Graph &graph,
+	GraphNode_descriptor s, 
 	GraphNode_descriptor t,
 	std::vector<GraphNode_descriptor>& predecessors,
 	std::vector<double>& distances,
 	std::string filename
 )
 {
-	int s = 0; // source node index
-	int h = hops(predecessors, t);
+	if (distances[t] == std::numeric_limits<double>::infinity())
+	{
+		std::cout << "write_shortest_path_from_to_vtk: target node unreachable" << std::endl;
+	}
+
+	int h = hops(predecessors, s, t);
 
 	std::cout 
 	<< "from s=" << graph[s].vertex.idx() 
@@ -104,7 +109,7 @@ void write_shortest_path_to_vtk
 
 	file <<
 		"# vtk DataFile Version 2.0\n"
-		"longest shortest path\n"
+		"shortest path from " << graph[s].vertex.idx() << " to " << graph[t].vertex.idx() << "\n"
 		"ASCII\n"
 		"DATASET UNSTRUCTURED_GRID\n";
 	file << "POINTS " << n << " double\n";
