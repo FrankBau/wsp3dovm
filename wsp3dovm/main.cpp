@@ -99,6 +99,8 @@ void calc_edge_weights(Mesh &mesh)
 	}
 }
 
+std::ofstream distance_stream;
+
 double run_single_dijkstra(const Graph& graph, int s_node, int t_node, bool dump_tree = false, bool dump_path = false, filesystem::path basename = "out")
 {
 	// the distances are temporary, so we choose an external property for that
@@ -118,6 +120,8 @@ double run_single_dijkstra(const Graph& graph, int s_node, int t_node, bool dump
 	double euclidean_distance = norm(graph[s_node].point, graph[t_node].point);
 	double approx_distance = distance[t_node];
 	double approx_ratio = approx_distance / euclidean_distance;
+
+	distance_stream << approx_distance << ", ";
 
 	if(dump_tree)
 	{
@@ -316,6 +320,9 @@ int main(int argc, char** argv)
 		double histo[num_bins];
 		std::fill(begin(histo), end(histo), 0);
 
+		distance_stream.open( "distances.csv", fstream::out | fstream::app);
+		distance_stream << stretch << ", " << yardstick << ", " << graph.m_vertices.size() << ", " << graph.m_edges.size() << ", ";
+
 		for (int i = 0; i < num_random_s_t_vertices; ++i)
 		{
 			int s = next_random();
@@ -353,6 +360,9 @@ int main(int argc, char** argv)
 
 			sum_approx_ratio += approx_ratio;
 		}
+
+		distance_stream << "\n";
+		distance_stream.close();
 
 		double avg_approx_ratio = sum_approx_ratio / num_random_s_t_vertices;
 
