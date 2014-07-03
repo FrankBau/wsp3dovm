@@ -167,8 +167,9 @@ void read_tet(Mesh &mesh, std::string filename)
 
 	// now we can free some memory which is needed for other data structures:
 	// this caused to performance penalty (tested on NewFineMesh.1 -p)
-	std::cout << "  enable_vertex_bottom_up_incidences(false)..." << std::endl;
-	mesh.enable_vertex_bottom_up_incidences(false);
+	// no longer true, needed for vc_iter
+	//std::cout << "  enable_vertex_bottom_up_incidences(false)..." << std::endl;
+	//mesh.enable_vertex_bottom_up_incidences(false);
 
 	// otherwise would break later calls to some iterators (which?)
 	std::cout << "  enable_edge_bottom_up_incidences(true)..." << std::endl;

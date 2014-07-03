@@ -24,6 +24,17 @@ void write_shortest_path_from_to_vtk
 	std::string filename
 );
 
+void write_shortest_path_cells_from_to_vtk
+(
+	const Graph &graph,
+	const Mesh &mesh,
+	GraphNode_descriptor s,
+	GraphNode_descriptor t,
+	std::vector<GraphNode_descriptor>& predecessors,
+	std::vector<double>& distances,
+	std::string filename
+);
+
 // write complete graph, mainly for debugging small examples
 void write_graph_vtk
 (

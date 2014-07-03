@@ -194,7 +194,7 @@ void create_surface_steiner_points(Graph &graph, Mesh &mesh)
 		if (vh.is_valid())
 		{
 			GraphNode_descriptor node = boost::add_vertex(graph);
-			graph[node].vertex = vh;
+			graph[node].vh = vh;
 			graph[node].point = mesh.vertex(vh);
 			mesh.v_node(vh) = node;
 		}
@@ -423,6 +423,7 @@ void create_steiner_graph_nodes_interval_scheme_for_face(Graph &graph, Mesh &mes
 			{
 				GraphNode_descriptor node = boost::add_vertex(graph);
 				graph[node].point = p;
+				graph[node].fh = fh;
 				mesh.f_nodes(fh).push_back(node);
 			}
 		}
@@ -437,7 +438,7 @@ void create_steiner_graph_nodes_interval_scheme(Graph &graph, Mesh &mesh, double
 	{
 		VertexHandle vh = *it;
 		GraphNode_descriptor node = boost::add_vertex(graph);
-		graph[node].vertex = vh;
+		graph[node].vh = vh;
 		graph[node].point = mesh.vertex(vh);
 		mesh.v_node(vh) = node;
 	}
@@ -464,6 +465,7 @@ void create_steiner_graph_nodes_interval_scheme(Graph &graph, Mesh &mesh, double
 				GraphNode_descriptor node = boost::add_vertex(graph);
 				Point p = pu + (static_cast<double>(i) / static_cast<double>(k)) * edge_direction;
 				graph[node].point = p;
+				graph[node].eh = eh;
 				mesh.e_nodes(eh).push_back(node);
 			}
 			//std::cout << "added " << k << " steiner points to edge (" << u << "," << v << ") of length " << edge_length << std::endl;

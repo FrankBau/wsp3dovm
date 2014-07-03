@@ -20,7 +20,7 @@ void write_shortest_path_tree_vtk
 
 	file <<
 		"# vtk DataFile Version 2.0\n"
-		"shortest paths tree with root node " << graph[s].vertex.idx() << "\n"
+		"shortest paths tree with root node " << graph[s].vh.idx() << "\n"
 		"ASCII\n"
 		"DATASET UNSTRUCTURED_GRID\n";
 	file << "POINTS " << n << " double\n";
@@ -92,8 +92,8 @@ void write_shortest_path_from_to_vtk
 	int h = hops(predecessors, s, t);
 
 	std::cout 
-	<< "from s=" << graph[s].vertex.idx() 
-	<< " to t=" << graph[t].vertex.idx() 
+	<< "from s=" << graph[s].vh.idx() 
+	<< " to t=" << graph[t].vh.idx() 
 	<< " distance=" << distances[t]
 	<< " #hops = " << h 
 	<< std::endl;
@@ -109,7 +109,7 @@ void write_shortest_path_from_to_vtk
 
 	file <<
 		"# vtk DataFile Version 2.0\n"
-		"shortest path from " << graph[s].vertex.idx() << " to " << graph[t].vertex.idx() << "\n"
+		"shortest path from " << graph[s].vh.idx() << " to " << graph[t].vh.idx() << "\n"
 		"ASCII\n"
 		"DATASET UNSTRUCTURED_GRID\n";
 	file << "POINTS " << n << " double\n";
@@ -294,4 +294,172 @@ std::string filename
 	file << "\n";
 
 	file.close();
+}
+
+std::set<CellHandle> cells_from_graph_nodes
+(
+	const Graph& graph, 
+	const Mesh &mesh,
+	GraphNode_descriptor s,
+	GraphNode_descriptor t,
+	std::vector<GraphNode_descriptor>& predecessors
+)
+{
+	std::set<CellHandle> cells;
+
+	GraphNode_descriptor r = t;
+	for (;;)
+	{
+		if (graph[r].vh != OpenVolumeMesh::TopologyKernel::InvalidVertexHandle)
+		{
+			VertexHandle vh = graph[r].vh;
+
+			std::cout << "vrtx node " << vh.idx() << std::endl;
+			for (auto vc_iter = mesh.vc_iter(vh); vc_iter.valid(); ++vc_iter )
+			{
+				CellHandle ch = *vc_iter;
+				if (ch.is_valid())
+				{
+					std::cout << "  incident cell: " << ch.idx() << std::endl;
+					cells.insert(ch);
+				}
+			}
+		}
+		else if (graph[r].eh != OpenVolumeMesh::TopologyKernel::InvalidEdgeHandle)
+		{
+			EdgeHandle eh = graph[r].eh;
+			std::cout << "edge node " << eh.idx() << std::endl;
+
+			// we can choose either halfegde, both yield the same set (tested)
+			HalfEdgeHandle heh0 = mesh.halfedge_handle(eh, 0);
+			for (auto hec_iter = mesh.hec_iter(heh0); hec_iter.valid(); ++hec_iter)
+			{
+				CellHandle ch = *hec_iter;
+				if (ch.is_valid())
+				{
+					std::cout << "  incident cell: " << ch.idx() << std::endl;
+					cells.insert(ch);
+				}
+			}
+		}
+		else if (graph[r].fh != OpenVolumeMesh::TopologyKernel::InvalidFaceHandle)
+		{
+			FaceHandle fh = graph[r].fh;
+			std::cout << "face node " << fh.idx() << std::endl;
+			
+			HalfFaceHandle hfh0 = mesh.halfface_handle(fh, 0);
+			CellHandle ch0 = mesh.incident_cell(hfh0);
+			if (ch0.is_valid())
+			{
+				cells.insert(ch0);
+			}
+
+			HalfFaceHandle hfh1 = mesh.halfface_handle(fh, 1);
+			CellHandle ch1 = mesh.incident_cell(hfh1);
+			if (ch1.is_valid())
+			{
+				cells.insert(ch1);
+			}
+		}
+		else
+		{
+			assert(0 && "graph node should be vrtx, edge or face node.");
+		}
+
+		if (r == s)
+			break; 
+		r = predecessors[r];
+	}
+
+	std::cout << cells.size() << " cells out of " << mesh.n_cells() << " included in shortest path subcomplex" << std::endl;
+
+	return cells;
+}
+
+void write_shortest_path_cells_from_to_vtk
+(
+	const Graph &graph,
+	const Mesh &mesh,
+	GraphNode_descriptor s,
+	GraphNode_descriptor t,
+	std::vector<GraphNode_descriptor>& predecessors,
+	std::vector<double>& distances,
+	std::string filename
+)
+{
+	if (distances[t] == std::numeric_limits<double>::infinity())
+	{
+		std::cout << "write_shortest_path_cells_from_to_vtk: target node unreachable" << std::endl;
+	}
+
+	std::set<CellHandle> cells = cells_from_graph_nodes(graph, mesh, s, t, predecessors);
+
+	int h = hops(predecessors, s, t);
+
+	std::cout
+		<< "from s=" << graph[s].vh.idx()
+		<< " to t=" << graph[t].vh.idx()
+		<< " distance=" << distances[t]
+		<< " #hops = " << h
+		<< std::endl;
+
+	std::ofstream file(filename, std::ios::trunc);
+	if (!file.is_open())
+	{
+		std::cerr << "failed to open file " << filename << std::endl;
+		return;
+	}
+
+	size_t n = boost::num_vertices(graph);
+
+	file <<
+		"# vtk DataFile Version 2.0\n"
+		"cells along shortest path from " << graph[s].vh.idx() << " to " << graph[t].vh.idx() << "\n"
+		"ASCII\n"
+		"DATASET UNSTRUCTURED_GRID\n";
+	file << "POINTS " << n << " double\n";
+
+	std::vector<int> id(num_vertices(graph));
+	int i = 0;
+	Graph::vertex_iterator vertexIt, vertexEnd;
+	for (boost::tie(vertexIt, vertexEnd) = boost::vertices(graph); vertexIt != vertexEnd; ++vertexIt)
+	{
+		GraphNode_descriptor u = *vertexIt;
+		id[u] = i++;
+		file << graph[u].point << "\n";
+	}
+
+	file << "CELLS " << cells.size() << " " << 5 * cells.size() << "\n";
+	for (
+		auto cit =cells.begin(), end = cells.end();
+		cit != end;
+		++cit)
+	{
+		CellHandle ch = *cit;
+
+		file << "4 ";
+		for (auto vit = mesh.cv_iter(ch); vit; ++vit)
+			file << vit->idx() << " ";
+
+		file << "\n";
+	}
+
+	file << "CELL_TYPES " << cells.size() << "\n";
+	for (int i = 0; i < cells.size(); ++i)
+	{
+		// vtk cell type 10 is tetra
+		file << "10" "\n";
+	}
+
+	file
+		<< "POINT_DATA " << n << "\n"
+		<< "SCALARS distance double 1\n"
+		<< "LOOKUP_TABLE default\n";
+
+	for (boost::tie(vertexIt, vertexEnd) = boost::vertices(graph); vertexIt != vertexEnd; ++vertexIt)
+	{
+		GraphNode_descriptor u = *vertexIt;
+		file << distances[u] << "\n";
+	}
+	file << "\n";
 }

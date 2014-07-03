@@ -93,8 +93,10 @@ public:
 		// std::cout << "GraphNode()" << std::endl;
 	}
 
-	// the original vertex in tetrahedralization
-	VertexHandle vertex = OpenVolumeMesh::TopologyKernel::InvalidCellHandle;
+	// the original vertex in tetrahedralization, resp. the edge/face for what that node was created
+	VertexHandle vh = OpenVolumeMesh::TopologyKernel::InvalidVertexHandle;
+	EdgeHandle eh = OpenVolumeMesh::TopologyKernel::InvalidEdgeHandle;
+	FaceHandle fh = OpenVolumeMesh::TopologyKernel::InvalidFaceHandle;
 	Point point;	// geometric location
 };
 

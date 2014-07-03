@@ -116,7 +116,17 @@ void calc_edge_weights(Mesh &mesh)
 
 std::ofstream distance_stream;
 
-double run_single_dijkstra(const Graph& graph, int s_node, int t_node, bool dump_tree = false, bool dump_path = false, filesystem::path basename = "out")
+double run_single_dijkstra
+(
+const Graph& graph,
+const Mesh& mesh,
+int s_node,
+int t_node,
+bool dump_tree = false,
+bool dump_path = false,
+bool dump_cells = false,
+filesystem::path basename = "out"
+)
 {
 	// the distances are temporary, so we choose an external property for that
 	std::vector<double> distance(num_vertices(graph));
@@ -172,6 +182,25 @@ double run_single_dijkstra(const Graph& graph, int s_node, int t_node, bool dump
 			basename.filename().replace_extension(extension.str()).string()
 			);
 		std::cout << "write_shortest_path_to_vtk: " << t.seconds() << " s" << std::endl;
+	}
+
+	if (dump_cells)
+	{
+		timer<high_resolution_clock> t;
+
+		stringstream extension;
+		extension << "_wsp_path_cells_s" << s_node << "_t" << t_node << ".vtk";
+
+		write_shortest_path_cells_from_to_vtk(
+			graph,
+			mesh,
+			s_node,
+			t_node,
+			predecessor,
+			distance,
+			basename.filename().replace_extension(extension.str()).string()
+			);
+		std::cout << "write_shortest_path_cells_from_to_vtk: " << t.seconds() << " s" << std::endl;
 	}
 
 	return approx_ratio;
@@ -304,7 +333,7 @@ int main(int argc, char** argv)
 	{
 		std::cout << "running single dijkstra for s=" << start_vertex << " and t=" << termination_vertex << std::endl;
 		
-		double approx_ratio = run_single_dijkstra(graph, start_vertex, termination_vertex, true, true, inputfilename.filename());
+		double approx_ratio = run_single_dijkstra(graph, mesh, start_vertex, termination_vertex, true, true, true, inputfilename.filename());
 
 		std::cout << "shortest path approximation ratio: " << approx_ratio << std::endl;
 	}
@@ -346,7 +375,7 @@ int main(int argc, char** argv)
 			while (s==t) // for s==t, the approx. ratio cannot be calculated
 				t = next_random();
 
-			double approx_ratio = run_single_dijkstra(graph, s, t );
+			double approx_ratio = run_single_dijkstra(graph, mesh, s, t );
 
 			int bin = (int)(num_bins * (approx_ratio - histo_min) / (histo_max - histo_min));
 			if (bin < 0)
