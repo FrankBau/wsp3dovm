@@ -38,8 +38,23 @@ void set_cell_weights(Mesh &mesh)
 	for (auto c_it = mesh.cells_begin(); c_it != mesh.cells_end(); ++c_it)
 	{
 		CellHandle ch = *c_it;
+
+		// random weight
 		//mesh.weight(ch) = get_random_weight();
+
+#if 1
+		// unit weight, good for comparng approx. against Euclidean distance (if path is inside, e.g. for convex cell complexes)
 		mesh.weight(ch) = 1;
+#else
+		// for twolayermdl
+		{
+			Point center = mesh.barycenter(ch);
+			if (center[2] < 0)
+				mesh.weight(ch) = 1;
+			else
+				mesh.weight(ch) = 4;
+		}
+#endif
 	}
 }
 
