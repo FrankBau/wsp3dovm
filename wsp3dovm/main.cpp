@@ -1,6 +1,7 @@
 #include "common.h"
 
 #include "read_tet.h"
+#include "write_tet.h"
 #include "write_vtk.h"
 #include "create_steinerpoints.h"
 #include "statistics.h"
@@ -201,6 +202,10 @@ filesystem::path basename = "out"
 			basename.filename().replace_extension(extension.str()).string()
 			);
 		std::cout << "write_shortest_path_cells_from_to_vtk: " << t.seconds() << " s" << std::endl;
+
+		std::set<CellHandle> cells = cells_from_graph_nodes(graph, mesh, s_node, t_node, predecessor);
+
+		write_cells_tet(mesh, cells, basename.filename().replace_extension(extension.str()).string());
 	}
 
 	return approx_ratio;

@@ -239,6 +239,7 @@
     <ClCompile Include="main.cpp" />
     <ClCompile Include="read_tet.cpp" />
     <ClCompile Include="statistics.cpp" />
+    <ClCompile Include="write_tet.cpp" />
     <ClCompile Include="write_vtk.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -247,6 +248,7 @@
     <ClInclude Include="MeshGenerator.hpp" />
     <ClInclude Include="read_tet.h" />
     <ClInclude Include="statistics.h" />
+    <ClInclude Include="write_tet.h" />
     <ClInclude Include="write_vtk.h" />
   </ItemGroup>
   <ItemGroup>
