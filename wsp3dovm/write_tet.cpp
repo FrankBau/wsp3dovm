@@ -34,12 +34,12 @@ void write_ele_tet(const Mesh& mesh, const std::set<CellHandle>& cells, const st
 
 	int i = 1;
 
-	file << cells.size() << " 4 0\n";
+	file << cells.size() << "  4  0\n";
 	for (auto ch : cells)
 	{
-		file << std::setw(6) << i++ << " ";
+		file << std::setw(5) << i++ << " ";
 		for (auto vit = mesh.cv_iter(ch); vit; ++vit)
-			file << vit->idx() << " ";
+			file << std::setw(5) << 1+vit->idx() << " "; // tet format is 1-based
 		file << "\n";
 	}
 

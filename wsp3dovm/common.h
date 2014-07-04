@@ -215,13 +215,13 @@ static inline std::set<CellHandle> cells_from_graph_nodes
 		{
 			VertexHandle vh = graph[r].vh;
 
-			std::cout << "vrtx node " << vh.idx() << std::endl;
+			//std::cout << "vrtx node " << vh.idx() << std::endl;
 			for (auto vc_iter = mesh.vc_iter(vh); vc_iter.valid(); ++vc_iter)
 			{
 				CellHandle ch = *vc_iter;
 				if (ch.is_valid())
 				{
-					std::cout << "  incident cell: " << ch.idx() << std::endl;
+					//std::cout << "  incident cell: " << ch.idx() << std::endl;
 					cells.insert(ch);
 				}
 			}
@@ -229,7 +229,7 @@ static inline std::set<CellHandle> cells_from_graph_nodes
 		else if (graph[r].eh != OpenVolumeMesh::TopologyKernel::InvalidEdgeHandle)
 		{
 			EdgeHandle eh = graph[r].eh;
-			std::cout << "edge node " << eh.idx() << std::endl;
+			//std::cout << "edge node " << eh.idx() << std::endl;
 
 			// we can choose either halfegde, both yield the same set (tested)
 			HalfEdgeHandle heh0 = mesh.halfedge_handle(eh, 0);
@@ -238,7 +238,7 @@ static inline std::set<CellHandle> cells_from_graph_nodes
 				CellHandle ch = *hec_iter;
 				if (ch.is_valid())
 				{
-					std::cout << "  incident cell: " << ch.idx() << std::endl;
+					//std::cout << "  incident cell: " << ch.idx() << std::endl;
 					cells.insert(ch);
 				}
 			}
@@ -246,7 +246,7 @@ static inline std::set<CellHandle> cells_from_graph_nodes
 		else if (graph[r].fh != OpenVolumeMesh::TopologyKernel::InvalidFaceHandle)
 		{
 			FaceHandle fh = graph[r].fh;
-			std::cout << "face node " << fh.idx() << std::endl;
+			//std::cout << "face node " << fh.idx() << std::endl;
 
 			HalfFaceHandle hfh0 = mesh.halfface_handle(fh, 0);
 			CellHandle ch0 = mesh.incident_cell(hfh0);

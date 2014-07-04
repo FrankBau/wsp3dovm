@@ -353,7 +353,8 @@ void write_shortest_path_cells_from_to_vtk
 	for (
 		auto cit =cells.begin(), end = cells.end();
 		cit != end;
-		++cit)
+		++cit
+		)
 	{
 		CellHandle ch = *cit;
 
@@ -372,14 +373,17 @@ void write_shortest_path_cells_from_to_vtk
 	}
 
 	file
-		<< "POINT_DATA " << n << "\n"
-		<< "SCALARS distance double 1\n"
+		<< "CELL_DATA " << cells.size() << "\n"
+		<< "SCALARS cellweight double 1\n"
 		<< "LOOKUP_TABLE default\n";
 
-	for (boost::tie(vertexIt, vertexEnd) = boost::vertices(graph); vertexIt != vertexEnd; ++vertexIt)
+	for (
+		auto cit = cells.begin(), end = cells.end();
+		cit != end;
+		++cit
+		)
 	{
-		GraphNode_descriptor u = *vertexIt;
-		file << distances[u] << "\n";
+		CellHandle ch = *cit;
+		file << mesh.weight(ch) << "\n";
 	}
-	file << "\n";
 }
