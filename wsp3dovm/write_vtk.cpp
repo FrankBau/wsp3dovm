@@ -58,7 +58,17 @@ void write_shortest_path_tree_vtk
 	for (boost::tie(vertexIt, vertexEnd) = boost::vertices(graph); vertexIt != vertexEnd; ++vertexIt)
 	{
 		GraphNode_descriptor u = *vertexIt;
-		file << distances[u] << "\n";
+		double distance = distances[u];
+		if (isfinite(distance))
+		{
+			file << distance << "\n";
+		}
+		else
+		{
+			// ParaView cannot handle 1.#INF or the like in the .vtk file
+			// but we keep the value distinguishable from a normal 0
+			file << "-0\n";
+		}
 	}
 	file << "\n";
 }
@@ -146,7 +156,17 @@ void write_shortest_path_from_to_vtk
 	for (boost::tie(vertexIt, vertexEnd) = boost::vertices(graph); vertexIt != vertexEnd; ++vertexIt)
 	{
 		GraphNode_descriptor u = *vertexIt;
-		file << distances[u] << "\n";
+		double distance = distances[u];
+		if (isfinite(distance))
+		{
+			file << distance << "\n";
+		}
+		else
+		{
+			// ParaView cannot handle 1.#INF or the like in the .vtk file
+			// but we keep the value distinguishable from a normal 0
+			file << "-0\n";
+		}
 	}
 	file << "\n";
 }
