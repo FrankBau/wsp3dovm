@@ -127,13 +127,13 @@ int main(int argc, char * argv)
 			{
 				int region_index = 1 + xx*y*z + yy*z + zz;
 				
-				double weight;
+				unsigned int weight; // tetgen conversion needs integral values
 				if (zz >= 30)
-					weight = 5000;
+					weight = 10000 / 5000;
 				else if (zz >= 10)
-					weight = 2000;
+					weight = 10000 / 2000;
 				else
-					weight = 500;
+					weight = 10000 / 500;
 
 				file << region_index << " " << dx*xx+dx/2 << " " << dy*yy+dy/2 << " " << -(dz*zz+dz/2) << " " << weight << endl;
 			}

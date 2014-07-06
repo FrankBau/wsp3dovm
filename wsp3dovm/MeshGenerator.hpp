@@ -73,7 +73,7 @@ public:
 
     typedef OpenVolumeMesh::Geometry::Vec3d Vec3d;
 
-    MeshGenerator(PolyhedralMesh& _mesh) : v_component_(0), mesh_(_mesh), progress_() {}
+    MeshGenerator(Mesh& _mesh) : v_component_(0), mesh_(_mesh), progress_() {}
     MeshGenerator(const MeshGenerator& _cpy) :
         v_component_(_cpy.v_component_),
         vertex_(0.0, 0.0, 0.0),
@@ -102,18 +102,20 @@ public:
         v_component_ = 0;
     }
 
-    void add_cell_vertex(unsigned int _idx) {
+	CellHandle add_cell_vertex(unsigned int _idx) {
 
+		CellHandle ch = Kernel::InvalidCellHandle;
         assert(_idx > 0);
 
         c_vertices_.push_back(OpenVolumeMesh::VertexHandle((int)_idx - 1));
         if(c_vertices_.size() == 4) {
 
-            add_tetrahedral_cell();
+            ch = add_tetrahedral_cell();
 //            std::cerr << "Adding cell (" << c_vertices_[0] << ", " << c_vertices_[1] <<
 //                    ", " << c_vertices_[2] << ", " << c_vertices_[3] << ")" << std::endl;
             c_vertices_.clear();
         }
+		return ch;
     }
 
     void set_num_cells(unsigned int _n) {
@@ -123,11 +125,11 @@ public:
         }
     }
 
-    void add_tetrahedral_cell() {
+    CellHandle add_tetrahedral_cell() {
 
         if(c_vertices_.size() != 4) {
             std::cerr << "The specified cell is not incident to four vertices!" << std::endl;
-            return;
+			return Kernel::InvalidCellHandle;
         }
 
         // Get cell's mid-point
@@ -224,16 +226,24 @@ public:
         assert(cell_halffaces.size() == 4);
 
         // Finally, add cell
+		CellHandle ch;
 #ifndef NDEBUG
-        mesh_.add_cell(cell_halffaces, true);
+        ch = mesh_.add_cell(cell_halffaces, true);
 #else
-        mesh_.add_cell(cell_halffaces, false);
+        ch = mesh_.add_cell(cell_halffaces, false);
 #endif
 
         // Increase progress counter
         if((progress_.get() != NULL) && (progress_->expected_count() != 0))
             ++(*progress_);
+
+		return ch;
     }
+
+	Mesh& mesh()
+	{
+		return mesh_;
+	}
 
 private:
 
@@ -246,7 +256,7 @@ private:
 
     FaceMap faceMap_;
 
-    PolyhedralMesh& mesh_;
+    Mesh& mesh_;
 
     boost::shared_ptr<boost::progress_display> progress_;
 };

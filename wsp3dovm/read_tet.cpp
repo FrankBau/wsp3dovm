@@ -129,9 +129,17 @@ void read_tetras( MeshGenerator &meshGenerator, std::string filename)
 		meshGenerator.add_cell_vertex(w + 1);
 		meshGenerator.add_cell_vertex(x + 1);
 
-		// ignored
+		// weight
+		double weight;
 		if (has_boundary_marker)
-			tetra_file >> j;
+		{
+			tetra_file >> weight;
+		}
+		else
+		{
+			weight = 1.0;
+		}
+		meshGenerator.mesh()._cellWeight.push_back(weight);
 	}
 	tetra_file.close();
 }

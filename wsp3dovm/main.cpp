@@ -287,7 +287,8 @@ int main(int argc, char** argv)
 	read_tet(mesh, inputfilename.string() );
 	std::cout << "read_tet: " << t.seconds() << " s" << std::endl;
 
-	set_cell_weights(mesh);
+	// cell weight are now initialized from tet file, weight 1.0 is used when no specific weights are present
+	//set_cell_weights(mesh);
 	calc_face_weights(mesh);
 	calc_edge_weights(mesh);
 
