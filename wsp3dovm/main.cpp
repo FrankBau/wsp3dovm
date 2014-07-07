@@ -285,7 +285,7 @@ int main(int argc, char** argv)
 
 	timer<high_resolution_clock> t;
 	read_tet(mesh, inputfilename.string() );
-	std::cout << "read_tet: " << t.seconds() << " s" << std::endl;
+	std::cout << "read_tet [s]: " << t.seconds() << std::endl;
 
 	// cell weight are now initialized from tet file, weight 1.0 is used when no specific weights are present
 	//set_cell_weights(mesh);
@@ -299,7 +299,7 @@ int main(int argc, char** argv)
 	{
 		timer<high_resolution_clock> t;
 		write_vtk(mesh, inputfilename.filename().replace_extension(".vtk").string() );
-		std::cout << "write_vtk: " << t.seconds() << " s" << std::endl;
+		std::cout << "write_vtk [s]: " << t.seconds() << std::endl;
 	}
 	
 	Graph graph;
@@ -313,13 +313,13 @@ int main(int argc, char** argv)
 		if (stretch < 0.0)
 		{
 			create_surface_steiner_points(graph, mesh);
-			std::cout << "create_surface_steiner_points: " << t.seconds() << " s" << std::endl;
+			std::cout << "create_surface_steiner_points [s]: " << t.seconds() <<std::endl;
 		}
 		else
 		{
 			std::cout << "create_steiner_graph_improved_spanner with stretch " << stretch << " and interval " << yardstick << std::endl;
 			create_steiner_graph_improved_spanner(graph, mesh, stretch, yardstick );
-			std::cout << "create_steiner_graph_improved_spanner took: " << t.seconds() << " s" << std::endl;
+			std::cout << "create_steiner_graph_improved_spanner [s]: " << t.seconds() << std::endl;
 		}
 	}
 	
@@ -332,14 +332,18 @@ int main(int argc, char** argv)
 	{
 		timer<high_resolution_clock> t;
 		write_graph_vtk(graph, inputfilename.filename().replace_extension("_steiner_graph.vtk").string());
-		std::cout << "write_steiner_graph_vtk: " << t.seconds() << " s" << std::endl;
+		std::cout << "write_steiner_graph_vtk [s]: " << t.seconds() << std::endl;
 	}
 
 	if (start_vertex >= 0 && termination_vertex >= 0)
 	{
 		std::cout << "running single dijkstra for s=" << start_vertex << " and t=" << termination_vertex << std::endl;
 		
+		timer<high_resolution_clock> t;
+
 		double approx_ratio = run_single_dijkstra(graph, mesh, start_vertex, termination_vertex, true, true, true, inputfilename.filename());
+
+		std::cout << "total time [s] for " << 1 << " dijkstra_shortest_paths: " << t.seconds() << std::endl;
 
 		std::cout << "shortest path approximation ratio: " << approx_ratio << std::endl;
 	}
@@ -416,7 +420,7 @@ int main(int argc, char** argv)
 
 		double avg_approx_ratio = sum_approx_ratio / num_random_s_t_vertices;
 
-		std::cout << "total time for " << num_random_s_t_vertices << " dijkstra_shortest_paths: " << t.seconds() << " s" << std::endl;
+		std::cout << "total time [s] for " << num_random_s_t_vertices << " dijkstra_shortest_paths: " << t.seconds() << std::endl;
 		std::cout << "min shortest path approximation ratio: " << min_approx_ratio << " s=" << min_s << " , t=" << min_t << std::endl;
 		std::cout << "avg shortest path approximation ratio: " << avg_approx_ratio << std::endl;
 		std::cout << "max shortest path approximation ratio: " << max_approx_ratio << " s=" << max_s << " , t=" << max_t << std::endl;
@@ -429,7 +433,7 @@ int main(int argc, char** argv)
 	
 	// write_graph_dot("graph.dot", graph);
 
-	std::cout << "This is the end, total time: " << total_time.seconds() << " s" << std::endl;
+	std::cout << "This is the end, total time [s]: " << total_time.seconds() << std::endl;
 
 	return EXIT_SUCCESS;
 }
