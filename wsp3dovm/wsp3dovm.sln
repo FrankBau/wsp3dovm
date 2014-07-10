@@ -7,6 +7,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "wsp3dovm", "wsp3dovm.vcxpro
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "build_cuboid", "..\build_cuboid\build_cuboid.vcxproj", "{29466A2C-CDDB-4DFA-B62C-4C12D9D4CB45}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Zurich1", "..\Zurich1\Zurich1.vcxproj", "{624FEC40-93EC-436C-ACDC-492F870B304C}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Mixed Platforms = Debug|Mixed Platforms
@@ -39,6 +41,16 @@ Global
 		{29466A2C-CDDB-4DFA-B62C-4C12D9D4CB45}.Release|Win32.ActiveCfg = Release|Win32
 		{29466A2C-CDDB-4DFA-B62C-4C12D9D4CB45}.Release|Win32.Build.0 = Release|Win32
 		{29466A2C-CDDB-4DFA-B62C-4C12D9D4CB45}.Release|x64.ActiveCfg = Release|Win32
+		{624FEC40-93EC-436C-ACDC-492F870B304C}.Debug|Mixed Platforms.ActiveCfg = Debug|Win32
+		{624FEC40-93EC-436C-ACDC-492F870B304C}.Debug|Mixed Platforms.Build.0 = Debug|Win32
+		{624FEC40-93EC-436C-ACDC-492F870B304C}.Debug|Win32.ActiveCfg = Debug|Win32
+		{624FEC40-93EC-436C-ACDC-492F870B304C}.Debug|Win32.Build.0 = Debug|Win32
+		{624FEC40-93EC-436C-ACDC-492F870B304C}.Debug|x64.ActiveCfg = Debug|Win32
+		{624FEC40-93EC-436C-ACDC-492F870B304C}.Release|Mixed Platforms.ActiveCfg = Release|Win32
+		{624FEC40-93EC-436C-ACDC-492F870B304C}.Release|Mixed Platforms.Build.0 = Release|Win32
+		{624FEC40-93EC-436C-ACDC-492F870B304C}.Release|Win32.ActiveCfg = Release|Win32
+		{624FEC40-93EC-436C-ACDC-492F870B304C}.Release|Win32.Build.0 = Release|Win32
+		{624FEC40-93EC-436C-ACDC-492F870B304C}.Release|x64.ActiveCfg = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -336,13 +336,6 @@ void write_shortest_path_cells_from_to_vtk
 
 	int h = hops(predecessors, s, t);
 
-	std::cout
-		<< "from s=" << graph[s].vh.idx()
-		<< " to t=" << graph[t].vh.idx()
-		<< " distance=" << distances[t]
-		<< " #hops = " << h
-		<< std::endl;
-
 	std::ofstream file(filename, std::ios::trunc);
 	if (!file.is_open())
 	{

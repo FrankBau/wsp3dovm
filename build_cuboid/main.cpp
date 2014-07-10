@@ -7,9 +7,9 @@ using namespace std;
 
 int main(int argc, char * argv)
 {
-	int x = 200;	// number of cubes in x direction (left to right)
-	int y = 1;	// number of cubes in y direction
-	int z = 50;	// number of cubes in z direction (down)
+	int x = 100;	// number of cubes in x direction (left to right)
+	int y = 1;		// number of cubes in y direction
+	int z = 31;		// number of cubes in z direction (down)
 
 	// cube edge length
 	double dx = 1.0;
