@@ -115,7 +115,7 @@ int main(int argc, char * argv)
 #if 0
 	// number of regions
 	file << "0" << endl; // no regions (yet)
-#else
+#elif defined(ZURICH_1)
 	// number of regions
 	file << x*y*z << endl;
 
@@ -136,6 +136,30 @@ int main(int argc, char * argv)
 					weight = 10000 / 500;
 
 				file << region_index << " " << dx*xx+dx/2 << " " << dy*yy+dy/2 << " " << -(dz*zz+dz/2) << " " << weight << endl;
+			}
+		}
+	}
+#else // ZURICH_2
+	// number of regions
+	file << x*y*z << endl;
+
+	for (int xx = 0; xx < x; ++xx)
+	{
+		for (int yy = 0; yy < y; ++yy)
+		{
+			for (int zz = 0; zz < z; ++zz)
+			{
+				int region_index = 1 + xx*y*z + yy*z + zz;
+
+				unsigned int weight; // tetgen conversion needs integral values
+				if (zz >= 30)
+					weight = 10000 / (5000 + 200*(zz-30));	// v3 = 5000 m/s (dv/dz = 200 m/s)
+				else if (zz >= 10)
+					weight = 10000 / (2000 + 100*(zz-10));	// v2 = 2000 m/s (dv/dz = 100 m/s),
+				else
+					weight = 10000 / ( 500 + 100*(zz- 0));	// v1 = 500 m/s (dv/dz = 100 m/s),
+
+				file << region_index << " " << dx*xx + dx / 2 << " " << dy*yy + dy / 2 << " " << -(dz*zz + dz / 2) << " " << weight << endl;
 			}
 		}
 	}
