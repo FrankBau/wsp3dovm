@@ -26,36 +26,22 @@ public:
   }
 };
 
-
-void set_cell_weights(Mesh &mesh)
+void set_random_cell_weights(Mesh &mesh)
 {
-	boost::mt19937 rng;
-	boost::uniform_real<> unity(0.0, 1.0);
-	boost::variate_generator<boost::mt19937&, boost::uniform_real<> > get_random_weight(rng, unity);
-	int i = 1;
+	// random_device may be a non-deterministic random number generator using hardware entropy source
+	//std::random_device random_device;
+	std::mt19937 generator/*(random_device())*/;
+	std::uniform_real_distribution<> random_value(1, 1000);
 
+	// is not clear to me, what a good distribution could look like.
+	// the lower limit 1 is such that it is not too close to 0 (where all paths would have equal length 0)
+	// but allows for a higher max/min ratio such that path reflection on faces/edges is quite possible
 	mesh._cellWeight.resize(mesh.n_cells());
 
 	for (auto c_it = mesh.cells_begin(); c_it != mesh.cells_end(); ++c_it)
 	{
 		CellHandle ch = *c_it;
-
-		// random weight
-		//mesh.weight(ch) = get_random_weight();
-
-#if 1
-		// unit weight, good for comparng approx. against Euclidean distance (if path is inside, e.g. for convex cell complexes)
-		mesh.weight(ch) = 1;
-#else
-		// for twolayermdl
-		{
-			Point center = mesh.barycenter(ch);
-			if (center[2] < 0)
-				mesh.weight(ch) = 1;
-			else
-				mesh.weight(ch) = 4;
-		}
-#endif
+		mesh.weight(ch) = random_value(generator);
 	}
 }
 
@@ -223,6 +209,7 @@ int main(int argc, char** argv)
 	int termination_vertex; // an optional termination vertex for which the shortest path will be reported
 	bool write_mesh_vtk;
 	bool write_steiner_graph_vtk;
+	bool use_random_cellweights;
 
 	int num_random_s_t_vertices; // number of randomly generated s and t vertex pairs
 
@@ -237,10 +224,11 @@ int main(int argc, char** argv)
 		("random_s_t_vertices,r", program_options::value<int>(&num_random_s_t_vertices)->default_value(0), "number of randomly generated s and t vertex pairs")
 		("spanner_stretch,x", program_options::value<double>(&stretch)->default_value(0.0), "spanner graph stretch factor")
 		("yardstick,y", program_options::value<double>(&yardstick)->default_value(0.0), "interval length for interval scheme (0: do not subdivide edges)")
-		("write_mesh_vtk", program_options::value<bool>(&write_mesh_vtk)->default_value(false), "write input mesh as .vtk")
-		("write_steiner_graph_vtk", program_options::value<bool>(&write_steiner_graph_vtk)->default_value(false), "write steiner graph as .vtk")
+		("write_mesh_vtk,m", program_options::value<bool>(&write_mesh_vtk)->default_value(false), "write input mesh as .vtk")
+		("write_steiner_graph_vtk,g", program_options::value<bool>(&write_steiner_graph_vtk)->default_value(false), "write steiner graph as .vtk")
+		("use-random-cellweights,u", program_options::value<bool>(&use_random_cellweights)->default_value(false), "generate (pseudo-)random cell weights internally")
 		("input-mesh", program_options::value<std::string>(), "set input filename (tetgen 3D mesh files wo extension)")
-		;
+	;
 
 	program_options::positional_options_description positional_options;
 	positional_options.add("input-mesh", 1);
@@ -287,8 +275,11 @@ int main(int argc, char** argv)
 	read_tet(mesh, inputfilename.string() );
 	std::cout << "read_tet [s]: " << t.seconds() << std::endl;
 
-	// cell weight are now initialized from tet file, weight 1.0 is used when no specific weights are present
-	//set_cell_weights(mesh);
+	// cell weight are initialized from tet file, weight 1.0 is used when no specific weights are present
+	if (use_random_cellweights)
+	{
+		set_random_cell_weights(mesh);
+	}
 	calc_face_weights(mesh);
 	calc_edge_weights(mesh);
 
@@ -352,10 +343,9 @@ int main(int argc, char** argv)
 	{
 		std::cout << "running " << num_random_s_t_vertices << " dijkstra for random vertex pairs" << std::endl;
 
-		mt19937 gen;
+		std::mt19937 generator;
 		// we take only original mesh vertices into account such that computations for different stener graphs keep comparable
-		boost::uniform_int<> range(0, mesh.n_vertices()-1); // closed interval (including max) 
-		boost::variate_generator<boost::mt19937&, boost::uniform_int<> > next_random(gen, range);
+		std::uniform_int_distribution<> random_value(0, mesh.n_vertices() - 1); // closed interval (including max) 
 
 		double min_approx_ratio = std::numeric_limits<double>::max();
 		int min_s;
@@ -379,18 +369,18 @@ int main(int argc, char** argv)
 
 		for (int i = 0; i < num_random_s_t_vertices; ++i)
 		{
-			int s = next_random();
-			int t = next_random();
+			int s = random_value(generator);
+			int t = random_value(generator);
 
 			while (s==t) // for s==t, the approx. ratio cannot be calculated
-				t = next_random();
+				t = random_value(generator);
 
 			double approx_ratio = run_single_dijkstra(graph, mesh, s, t );
 
 			int bin = (int)(num_bins * (approx_ratio - histo_min) / (histo_max - histo_min));
 			if (bin < 0)
 			{
-				std::cerr << "ERROR: dijkstra (" << s << "," << t << ") produced shorter path than Euclid would allow." << std::endl;
+				std::cerr << "ERROR: Dijkstra (" << s << "," << t << ") produced shorter path than Euclid would allow." << std::endl;
 			}
 			if (bin >= num_bins)
 			{
