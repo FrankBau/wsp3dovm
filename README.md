@@ -66,7 +66,7 @@ Go to such an error location and click on Go To Definition. This will open Topol
 from OpenVolumeMesh. Change private to public and rebuild. This time there should be no more errors but some warnings.
 
 
-Testing
+Dry Run
 -------
 wsp3dovm needs some Boost DLLs for execution. In Visual Studio edit the project properties. 
 Under Configuration Properties > Debugging edit Environment. Set the following PATH:
@@ -77,6 +77,55 @@ which is automatically added before wsp3dovm is executed from within Visual Stud
 You may also add the folder C:\Users\Frank\Source\Repos\boost_1_55_0\lib64-msvc-12.0
 to the computers PATH variable to run wsp3dovm.exe without Visual Studio.
 
-In Visual Studio pres  Ctrl+F5 to execute wsp3dovm. 
-Because there are no commandline parameters given, a usage message will be displayed and the program exits.
+In Visual Studio press Ctrl+F5 to execute wsp3dovm. 
+Because there are no commandline parameters given, a usage message will be displayed and the program exits immediately.
 
+
+First Test
+----------
+
+Input: A 3D tetrahydralization consisting of two files:
+
+* .node file containing 3D coordinates of all vertices (3D points) of the tetrahydralization, one per line.
+* .ele file containing all tetrahedra (4 vertex indices), one per line.
+
+The first lines contain header information, for details see http://wias-berlin.de/software/tetgen/1.5/doc/manual/manual006.html.
+
+Example test1:
+
+test1.node
+	5	3 0 0
+	0	1.0	2.0	 1.0
+	1	4.0	0.0	 0.0
+	2	0.0	4.0	 0.0
+	3	0.0	0.0	 0.0
+	4	2.0	1.0	-1.0
+
+test1.ele
+	2	4 0
+	0	0 1 2 3
+	1	1 2 3 4
+
+Run wsp3dovm with the commandline arguments
+
+	--start_vertex 0 --termination_vertex 4 --yardstick 0.3 --write_mesh_vtk 1 test1
+
+This will output some statistics and generate the following output files:
+
+* test1.vtk
+* test1._wsp_path_s0_t4.vtk
+* test1._wsp_tree_s0.vtk
+* test1._wsp_path_cells_s0_t4.*
+
+The .vtk files can be visualized by ParaView from kitware http://www.kitware.com/opensource/opensource.html
+
+The file test1.vtk contians the input tetrahedralization in .vtk format for visualization
+The file test1._wsp_path_s0_t4.vtk contains the approximated shortest path between start vertex 0 and termination vertex 4
+The file test1._wsp_tree_s0.vtk contains the tree of all single source shortest paths starting at vertex 0
+The files test1._wsp_path_cells_s0_t4 represent the "3D buffer" around the approximated shortest path, a subset of the input tetrahedralization.
+
+
+tetgen
+------
+The tetgen software by Hang Si (http://wias-berlin.de/software/tetgen/) can generate 3D tetrahydralizations 
+from several input formats and can be used as a preprocessing step.
