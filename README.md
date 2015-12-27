@@ -94,6 +94,7 @@ The first lines contain header information, for details see http://wias-berlin.d
 Example test1:
 
 test1.node
+
 	5	3 0 0
 	0	1.0	2.0	 1.0
 	1	4.0	0.0	 0.0
@@ -102,6 +103,7 @@ test1.node
 	4	2.0	1.0	-1.0
 
 test1.ele
+
 	2	4 0
 	0	0 1 2 3
 	1	1 2 3 4
