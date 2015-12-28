@@ -1,13 +1,17 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Express 2013 for Windows Desktop
-VisualStudioVersion = 12.0.21005.1
+# Visual Studio 2013
+VisualStudioVersion = 12.0.30501.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "wsp3dovm", "wsp3dovm.vcxproj", "{5B82182C-CBD6-440E-BBF2-296F446CC00F}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "build_cuboid", "..\build_cuboid\build_cuboid.vcxproj", "{29466A2C-CDDB-4DFA-B62C-4C12D9D4CB45}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Zurich1", "..\Zurich1\Zurich1.vcxproj", "{624FEC40-93EC-436C-ACDC-492F870B304C}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{CCFBD50D-A5D2-4E8B-9143-747889C6D4F7}"
+	ProjectSection(SolutionItems) = preProject
+		..\LICENSE = ..\LICENSE
+		..\README.md = ..\README.md
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -41,21 +45,8 @@ Global
 		{29466A2C-CDDB-4DFA-B62C-4C12D9D4CB45}.Release|Win32.ActiveCfg = Release|Win32
 		{29466A2C-CDDB-4DFA-B62C-4C12D9D4CB45}.Release|Win32.Build.0 = Release|Win32
 		{29466A2C-CDDB-4DFA-B62C-4C12D9D4CB45}.Release|x64.ActiveCfg = Release|Win32
-		{624FEC40-93EC-436C-ACDC-492F870B304C}.Debug|Mixed Platforms.ActiveCfg = Debug|Win32
-		{624FEC40-93EC-436C-ACDC-492F870B304C}.Debug|Mixed Platforms.Build.0 = Debug|Win32
-		{624FEC40-93EC-436C-ACDC-492F870B304C}.Debug|Win32.ActiveCfg = Debug|Win32
-		{624FEC40-93EC-436C-ACDC-492F870B304C}.Debug|Win32.Build.0 = Debug|Win32
-		{624FEC40-93EC-436C-ACDC-492F870B304C}.Debug|x64.ActiveCfg = Debug|Win32
-		{624FEC40-93EC-436C-ACDC-492F870B304C}.Release|Mixed Platforms.ActiveCfg = Release|Win32
-		{624FEC40-93EC-436C-ACDC-492F870B304C}.Release|Mixed Platforms.Build.0 = Release|Win32
-		{624FEC40-93EC-436C-ACDC-492F870B304C}.Release|Win32.ActiveCfg = Release|Win32
-		{624FEC40-93EC-436C-ACDC-492F870B304C}.Release|Win32.Build.0 = Release|Win32
-		{624FEC40-93EC-436C-ACDC-492F870B304C}.Release|x64.ActiveCfg = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
-	EndGlobalSection
-	GlobalSection(Performance) = preSolution
-		HasPerformanceSessions = true
 	EndGlobalSection
 EndGlobal

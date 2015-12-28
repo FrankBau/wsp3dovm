@@ -81,10 +81,10 @@ In Visual Studio press Ctrl+F5 to execute wsp3dovm.
 Because there are no commandline parameters given, a usage message will be displayed and the program exits immediately.
 
 
-First Test
-----------
+First Test (unweighted case)
+----------------------------
 
-Input: A 3D tetrahydralization consisting of two files:
+Input: A 3D tetrahydralization consisting of two text files:
 
 * .node file containing 3D coordinates of all vertices (3D points) of the tetrahydralization, one per line.
 * .ele file containing all tetrahedra (4 vertex indices), one per line.
@@ -121,13 +121,38 @@ This will output some statistics and generate the following output files:
 
 The .vtk files can be visualized by ParaView from kitware http://www.kitware.com/opensource/opensource.html
 
-The file test1.vtk contians the input tetrahedralization in .vtk format for visualization
+The file test1.vtk contains the input tetrahedralization in .vtk format for visualization
 The file test1._wsp_path_s0_t4.vtk contains the approximated shortest path between start vertex 0 and termination vertex 4
 The file test1._wsp_tree_s0.vtk contains the tree of all single source shortest paths starting at vertex 0
-The files test1._wsp_path_cells_s0_t4 represent the "3D buffer" around the approximated shortest path, a subset of the input tetrahedralization.
+The files test1._wsp_path_cells_s0_t4 represent the "3D buffer" around the approximated shortest path, a subset of the input tetrahedralization
+which can be used for refinements.
 
 
-tetgen
+Second Test (weighted case)
+---------------------------
+
+Weights can be added easily to the .ele file. The .node file remains the same. 
+In this example, we use the refractive index of air and water:
+
+test2.node
+
+	5	3 0 0
+	0	1.0	2.0	 1.0
+	1	4.0	0.0	 0.0
+	2	0.0	4.0	 0.0
+	3	0.0	0.0	 0.0
+	4	2.0	1.0	-1.0
+
+test2.ele
+
+	2	4 1
+	0	0 1 2 3   	1.000293
+	1	1 2 3 4		1.3330
+
+Rerun wsp3dovm and compare the approximated shortest paths.
+
+
+Tetgen
 ------
 The tetgen software by Hang Si (http://wias-berlin.de/software/tetgen/) can generate 3D tetrahydralizations 
 from several input formats and can be used as a preprocessing step.

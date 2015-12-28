@@ -253,6 +253,10 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="ClassDiagram.cd" />
+    <None Include="test1.ele" />
+    <None Include="test1.node" />
+    <None Include="test2.ele" />
+    <None Include="test2.node" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
