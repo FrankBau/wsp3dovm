@@ -152,7 +152,86 @@ test2.ele
 Rerun wsp3dovm and compare the approximated shortest paths.
 
 
+Switching to Release Mode
+-------------------------
+When the firsts tests run successfully, it is a good idea to switch from Debug mode to Release mode for
+wsp3dovm and OpenVolumeMesh to increase execution speed. Rerun the tests to make sure that everything works okay.
+
+Since the resulting data structures become huge, 64-bit mode 8x64) is highly recommended.
+
+
 Tetgen
 ------
 The tetgen software by Hang Si (http://wias-berlin.de/software/tetgen/) can generate 3D tetrahydralizations 
-from several input formats and can be used as a preprocessing step.
+from several input formats and can be used as a preprocessing step. It comes with a makefile but can
+easily be compiled using visual Studio into an executable file tetgen.exe.
+
+
+A Larger Example (twolayermdl)
+------------------------------
+Here are some examples of 3D structures:
+
+http://wias-berlin.de/software/tetgen/1.5/fformats.examples.html
+
+We use twolayermdl which is a triangular surface mesh of some geographical sub-surface structure and consists of two files:
+
+* twolayermdl.node
+* twolayermdl.smesh
+
+Download these files and use tetgen.exe to create a tetrahedralization:
+
+	tetgen.exe -p -q1.4/18 -V twolayermdl.smesh
+
+The commandline parameters  
+* specify the input as an boundary description (surface mesh) of a 3D piecewise linear complex (-p)
+* request a maximum radius/edge ratio bound of 1.4 and a minimum dihedral angle bound of 18° (-q1.4/18) and
+* print a mesh quality report (-V)
+
+Consult the tetgen manual by Hang Si for details: http://wias-berlin.de/software/tetgen/1.5/doc/manual/index.html
+
+Tetgen creates 4 output files:
+
+* twolayermdl.1.edge
+* twolayermdl.1.ele
+* twolayermdl.1.face
+* twolayermdl.1.node
+
+We use the .ele and .node file as in the above tests. Now we execute a batch script (run_twolayermdl.cmd) of shortest path approximations in a Windows command shell (cmd).
+
+run_twolayermdl.cmd:
+
+	set W=x64\Release\wsp3dovm.exe
+
+	for /L %%Y in (200,-10,100) do (
+	  %W% --random_s_t_vertices 100 --spanner_stretch 0.0 --yardstick %%Y twolayermdl.1 >> logfile
+	)
+
+The yardstick defines the length of subdivision of each tetrahedron, i.e. Steiner points are created  with a max. distance of yardstick.
+
+Decreasing values between 200 and 100 and a step size of -10 are used in this script.
+
+Since script execution will take several minutes, I often use Process Monitor from https://technet.microsoft.com/en-us/sysinternals
+for supervision of CPU and memory usage while those scripts are running. It shows memory usage of up to 6.7 GB and 100% use of 1 CPU core.
+
+Now extract the average shortest path approximation ratio for each value of yardstick. 
+(Here it is assumed that the 3D structure is convex and hence the Euclidean distance between the end points is the true length of the shortest path.)
+
+	find "avg shortest path approximation ratio" logfile
+
+The output should look like
+
+	avg shortest path approximation ratio: 1.03114
+	avg shortest path approximation ratio: 1.02966
+	avg shortest path approximation ratio: 1.02717
+	avg shortest path approximation ratio: 1.02563
+	avg shortest path approximation ratio: 1.02419
+	avg shortest path approximation ratio: 1.02197
+	avg shortest path approximation ratio: 1.01988
+	avg shortest path approximation ratio: 1.01832
+	avg shortest path approximation ratio: 1.01604
+	avg shortest path approximation ratio: 1.01437
+	avg shortest path approximation ratio: 1.01261
+
+showing how the approximation improves when the yardstick decreases.
+
+It could be favorable to either switch to Linux or use cygwin under Windows. This would allow bash scripts and more powerful tools like grep, awk, perl etc.. to extract statistics data.
