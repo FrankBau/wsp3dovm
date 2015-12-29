@@ -210,7 +210,7 @@ The yardstick defines the length of subdivision of each tetrahedron, i.e. Steine
 
 Decreasing values between 200 and 100 and a step size of -10 are used in this script.
 
-Since script execution will take several minutes, I often use Process Monitor from https://technet.microsoft.com/en-us/sysinternals
+Since script execution will take several minutes, I often use Process Explorer from https://technet.microsoft.com/en-us/sysinternals
 for supervision of CPU and memory usage while those scripts are running. It shows memory usage of up to 6.7 GB and 100% use of 1 CPU core.
 
 Now extract the average shortest path approximation ratio for each value of yardstick. 
