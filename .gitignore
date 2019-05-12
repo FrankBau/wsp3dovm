@@ -181,3 +181,9 @@ UpgradeLog*.htm
 
 # Microsoft Fakes
 FakesAssemblies/
+*.db
+/.vs/slnx.sqlite
+*.poly
+/wsp3dovm/.vs/wsp3dovm/v16/Solution.VC.db-wal
+/wsp3dovm/.vs/wsp3dovm/v16/Solution.VC.db-shm
+/wsp3dovm/.vs/wsp3dovm/v16/Browse.VC.opendb

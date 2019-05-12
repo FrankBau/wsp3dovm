@@ -5,18 +5,52 @@
 
 using namespace std;
 
+#if 0
+
+// small test cuboid
+int x_min = 0;	// number of cubes in x direction (left to right)
+int y_min = 0;		// number of cubes in y direction
+int z_min = 0;		// number of cubes in z direction (down)
+
+int x_max = 2;	// number of cubes in x direction (left to right)
+int y_max = 3;		// number of cubes in y direction
+int z_max = 4;		// number of cubes in z direction (down)
+
+#else
+
+int x_min = -3;	// number of cubes in x direction (left to right)
+int y_min = -8;		// number of cubes in y direction
+int z_min = -144;		// number of cubes in z direction (down)
+
+int x_max = 3;	// number of cubes in x direction (left to right)
+int y_max = 8;		// number of cubes in y direction
+int z_max = 144;		// number of cubes in z direction (down)
+
+#endif
+
+// cube edge length
+double dx = 1.0;
+double dy = 1.0;
+double dz = 1.0;
+
+string filename = "cuboid.poly";
+
+// linearized index of a 3D node
+int idx(int x, int y, int z)
+{
+	return (((x-x_min) * (y_max - y_min + 1)) + (y-y_min)) * (z_max - z_min + 1) + (z-z_min) + 1;
+}
+
+int weight(int x, int y, int z)
+{
+	if (z > z_min+(z_max-z_min)/2)
+		return 4;
+	else
+		return 1;
+}
+
 int main(int argc, char * argv)
 {
-	int x = 100;	// number of cubes in x direction (left to right)
-	int y = 1;		// number of cubes in y direction
-	int z = 31;		// number of cubes in z direction (down)
-
-	// cube edge length
-	double dx = 1.0;
-	double dy = 1.0;
-	double dz = 1.0;
-
-	string filename = "cuboid.poly";
 
 	ofstream file(filename, ios::trunc);
 	if (!file.is_open())
@@ -28,40 +62,40 @@ int main(int argc, char * argv)
 	// Part 1 - node list
 	// node count, 3 dim, no attribute, no boundary marker
 
-	file << (x + 1)*(y + 1)*(z + 1) << " 3 0 0" << endl;
+	file << ((x_max-x_min) + 1)*((y_max-y_min) + 1)*((z_max-z_min) + 1) << " 3 0 0" << endl;
 
-	for (int xx = 0; xx <= x; ++xx)
+	for (int xx = x_min; xx <= x_max; ++xx)
 	{
-		for (int yy = 0; yy <= y; ++yy)
+		for (int yy = y_min; yy <= y_max; ++yy)
 		{
-			for (int zz = 0; zz <= z; ++zz)
+			for (int zz = z_min; zz <= z_max; ++zz)
 			{
 				// Node index, node coordinates
-				int node_index = 1 + xx*(y + 1)*(z + 1) + yy*(z + 1) + zz;
-				file << node_index << " " << dx*xx << " " << dy*yy << " " << -(dz*zz) << endl; // z axis goes down
+				int node_index = idx(xx, yy, zz);
+				file << node_index << " " << dx*xx << " " << dy*yy << " " << dz*zz << endl; // z axis goes down
 			}
 		}
 	}
 
 	// Part 2 - facet list
 	// facet count, no boundary marker
-	file << (x + 1)*y*z + x*(y + 1)*z + x*y*(z + 1) << " 0" << endl;
+	file << ((x_max - x_min) + 1)* (y_max - y_min) * (z_max - z_min) + (x_max - x_min) *((y_max - y_min) + 1)* (z_max - z_min) + (x_max - x_min) * (y_max - y_min) *((z_max - z_min) + 1) << " 0" << endl;
 
 	// facets
 	// perpendicular to x axis
-	for (int xx = 0; xx <= x; ++xx)
+	for (int xx = x_min; xx <= x_max; ++xx)
 	{
-		for (int yy = 0; yy < y; ++yy)
+		for (int yy = y_min; yy < y_max; ++yy)
 		{
-			for (int zz = 0; zz < z; ++zz)
+			for (int zz = z_min; zz < z_max; ++zz)
 			{
 				// 1 polygon, no hole, no boundary marker
 				file << "1" << endl;
 
-				int node1 = 1 + xx*(y + 1)*(z + 1) + (yy + 0)*(z + 1) + (zz + 0);
-				int node2 = 1 + xx*(y + 1)*(z + 1) + (yy + 1)*(z + 1) + (zz + 0);
-				int node3 = 1 + xx*(y + 1)*(z + 1) + (yy + 1)*(z + 1) + (zz + 1);
-				int node4 = 1 + xx*(y + 1)*(z + 1) + (yy + 0)*(z + 1) + (zz + 1);
+				int node1 = idx(xx, yy + 0, zz + 0);
+				int node2 = idx(xx, yy + 1, zz + 0);
+				int node3 = idx(xx, yy + 1, zz + 1);
+				int node4 = idx(xx, yy + 0, zz + 1);
 
 				file << "4 " << node1 << " " << node2 << " " << node3 << " " << node4 << endl;
 			}
@@ -69,19 +103,19 @@ int main(int argc, char * argv)
 	}
 
 	// perpendicular to y axis
-	for (int xx = 0; xx < x; ++xx)
+	for (int xx = x_min; xx < x_max; ++xx)
 	{
-		for (int yy = 0; yy <= y; ++yy)
+		for (int yy = y_min; yy <= y_max; ++yy)
 		{
-			for (int zz = 0; zz < z; ++zz)
+			for (int zz = z_min; zz < z_max; ++zz)
 			{
 				// 1 polygon, no hole, no boundary marker
 				file << "1" << endl;
 
-				int node1 = 1 + (xx + 0)*(y + 1)*(z + 1) + yy*(z + 1) + (zz + 0);
-				int node2 = 1 + (xx + 1)*(y + 1)*(z + 1) + yy*(z + 1) + (zz + 0);
-				int node3 = 1 + (xx + 1)*(y + 1)*(z + 1) + yy*(z + 1) + (zz + 1);
-				int node4 = 1 + (xx + 0)*(y + 1)*(z + 1) + yy*(z + 1) + (zz + 1);
+				int node1 = idx(xx + 0, yy, zz + 0);
+				int node2 = idx(xx + 1, yy, zz + 0);
+				int node3 = idx(xx + 1, yy, zz + 1);
+				int node4 = idx(xx + 0, yy, zz + 1);
 
 				file << "4 " << node1 << " " << node2 << " " << node3 << " " << node4 << endl;
 			}
@@ -89,19 +123,19 @@ int main(int argc, char * argv)
 	}
 
 	// perpendicular to z axis
-	for (int xx = 0; xx < x; ++xx)
+	for (int xx = x_min; xx < x_max; ++xx)
 	{
-		for (int yy = 0; yy < y; ++yy)
+		for (int yy = y_min; yy < y_max; ++yy)
 		{
-			for (int zz = 0; zz <= z; ++zz)
+			for (int zz = z_min; zz <= z_max; ++zz)
 			{
 				// 1 polygon, no hole, no boundary marker
 				file << "1" << endl;
 
-				int node1 = 1 + (xx + 0)*(y + 1)*(z + 1) + (yy + 0)*(z + 1) + zz;
-				int node2 = 1 + (xx + 1)*(y + 1)*(z + 1) + (yy + 0)*(z + 1) + zz;
-				int node3 = 1 + (xx + 1)*(y + 1)*(z + 1) + (yy + 1)*(z + 1) + zz;
-				int node4 = 1 + (xx + 0)*(y + 1)*(z + 1) + (yy + 1)*(z + 1) + zz;
+				int node1 = idx(xx + 0, yy + 0, zz);
+				int node2 = idx(xx + 1, yy + 0, zz);
+				int node3 = idx(xx + 1, yy + 1, zz);
+				int node4 = idx(xx + 0, yy + 1, zz);
 
 				file << "4 " << node1 << " " << node2 << " " << node3 << " " << node4 << endl;
 			}
@@ -112,58 +146,22 @@ int main(int argc, char * argv)
 	file << "0" << endl; // no holes
 
 	// Part 3 - region list
-#if 0
-	// number of regions
-	file << "0" << endl; // no regions (yet)
-#elif defined(ZURICH_1)
-	// number of regions
-	file << x*y*z << endl;
+	// number of regions, each center of a cube defines its own region
+	file << (x_max-x_min) * (y_max-y_min) * (z_max-z_min) << endl; // no holes
 
-	for (int xx = 0; xx < x; ++xx)
+	for (int xx = x_min; xx < x_max; ++xx)
 	{
-		for (int yy = 0; yy < y; ++yy)
+		for (int yy = y_min; yy < y_max; ++yy)
 		{
-			for (int zz = 0; zz < z; ++zz)
+			for (int zz = z_min; zz < z_max; ++zz)
 			{
-				int region_index = 1 + xx*y*z + yy*z + zz;
-				
-				unsigned int weight; // tetgen conversion needs integral values
-				if (zz >= 30)
-					weight = 10000 / 5000;
-				else if (zz >= 10)
-					weight = 10000 / 2000;
-				else
-					weight = 10000 / 500;
+				int node_index = idx(xx, yy, zz);
 
-				file << region_index << " " << dx*xx+dx/2 << " " << dy*yy+dy/2 << " " << -(dz*zz+dz/2) << " " << weight << endl;
+				// center coord
+				file << node_index << " " << dx * (xx+0.5) << " " << dy * (yy+0.5) << " " << dz * (zz+0.5) << " " << weight(xx,yy,zz) << endl; // z axis goes down
 			}
 		}
 	}
-#else // ZURICH_2
-	// number of regions
-	file << x*y*z << endl;
-
-	for (int xx = 0; xx < x; ++xx)
-	{
-		for (int yy = 0; yy < y; ++yy)
-		{
-			for (int zz = 0; zz < z; ++zz)
-			{
-				int region_index = 1 + xx*y*z + yy*z + zz;
-
-				unsigned int weight; // tetgen conversion needs integral values
-				if (zz >= 30)
-					weight = 10000 / (5000 + 200*(zz-30));	// v3 = 5000 m/s (dv/dz = 200 m/s)
-				else if (zz >= 10)
-					weight = 10000 / (2000 + 100*(zz-10));	// v2 = 2000 m/s (dv/dz = 100 m/s),
-				else
-					weight = 10000 / ( 500 + 100*(zz- 0));	// v1 = 500 m/s (dv/dz = 100 m/s),
-
-				file << region_index << " " << dx*xx + dx / 2 << " " << dy*yy + dy / 2 << " " << -(dz*zz + dz / 2) << " " << weight << endl;
-			}
-		}
-	}
-#endif
 
 	return EXIT_SUCCESS;
 }
