@@ -365,8 +365,8 @@ struct Mesh : GeometricHexahedralMeshV3f
 };
 
 
-
-int main()
+/////////////////////////////////////////// d=3 n=2 ////////////////////////////////////
+int main1()
 {
 	Mesh mesh;
 	
@@ -412,5 +412,100 @@ int main()
 	// generates: .node .ele. face .edge
 
 	// reads .node and .ele, ignores others
-	// ..\x64\RelWithDebInfo\wsp3dovm.exe --input-mesh test.1  --write_mesh_vtk 1 --start_vertex 2 --termination_vertex 13
+	// ..\x64\RelWithDebInfo\wsp3dovm.exe --input-mesh test.1  --write_mesh_vtk 1 --start_vertex 1 --termination_vertex 12
+
+	return 0;
+}
+
+
+int main()
+{
+	Mesh mesh;
+
+	int n = 4;
+	const int wx = 1;
+	const int wy = 3 * n;
+	const int wz = 4 * 3 * wy * n;
+
+#if 1
+	// weight=16: center
+	// these are n large slabs of height 1 and weight 1
+	// they are only partitioned into smaller parts to match satellite cuboid sizes
+	for (int i = 0; i < n; ++i) {
+		for (int j = 0; j < n; ++j) {
+			for (int k=0; k < n; ++k) {
+				mesh.add_cuboid( i*wx, j*wy, k*wz, wx, wy, wz, 16 );
+			}
+		}
+	}
+#endif
+
+#if 1
+	// weight=4: top-right and bottom-left
+	for (int j = 0; j < n; ++j) {
+		for (int k = 0; k < n; ++k) {
+			if (j % 2) {
+				mesh.add_cuboid( n, j * wy, k * wz, 1, wy, wz, 4);
+			}
+			else {
+				mesh.add_cuboid( 0, j * wy, k * wz, -1, wy, wz, 4);
+			}
+		}
+	}
+#endif
+
+	for (int i = 0; i < n; ++i) {
+		for (int k = 0; k < n; ++k) {
+			if (k % 2) {
+				mesh.add_cuboid( i*wx, n * wy, k * wz, wx, 1, wz, 1);
+			}
+			else {
+				mesh.add_cuboid( i*wx, 0, k * wz, wx, -1, wz, 1);
+			}
+		}
+	}
+
+	// weight=1: front-left and rear-right
+
+#if 0
+	mesh.add_cuboid(0, 0, 0, 1, 6, 144, 16);
+	mesh.add_cuboid(-1, 0, 0, 1, 6, 144, 16);
+	mesh.add_cuboid(0, 0, 0, 1, 6, -144, 16);
+	mesh.add_cuboid(-1, 0, 0, 1, 6, -144, 16);
+	mesh.add_cuboid(0, 0, 0, 1, -6, 144, 16);
+	mesh.add_cuboid(-1, 0, 0, 1, -6, 144, 16);
+	mesh.add_cuboid(0, 0, 0, 1, -6, -144, 16);
+	mesh.add_cuboid(-1, 0, 0, 1, -6, -144, 16);
+
+	// green: top-right and bottom-left
+	mesh.add_cuboid(1, 0, 0, 2, -6, 144, 4);
+	mesh.add_cuboid(1, 0, 0, 2, -6, -144, 4);
+	mesh.add_cuboid(-1, 0, 0, -2, 6, 144, 4);
+	mesh.add_cuboid(-1, 0, 0, -2, 6, -144, 4);
+
+	// gold: front-left and rear-right
+	mesh.add_cuboid(-1, 8, 0, 1, -2, 144, 1);
+	mesh.add_cuboid(0, 8, 0, 1, -2, 144, 1);
+
+	mesh.add_cuboid(1, -8, 0, -1, 2, -144, 1);
+	mesh.add_cuboid(0, -8, 0, -1, 2, -144, 1);
+#endif
+
+	cout << " n_cells=" << mesh.n_cells();
+	cout << " n_faces=" << mesh.n_faces();
+	cout << " n_edges=" << mesh.n_edges();
+	cout << " n_vertices=" << mesh.n_vertices();
+	cout << " genus=" << mesh.genus();
+	cout << endl;
+
+	mesh.write_poly("test.poly");
+
+	// ..\..\tetgen.exe -pqA test.poly (Mesh tetrahedra: 2106337)
+
+	// generates: .node .ele. face .edge
+
+	// reads .node and .ele, ignores others
+	// ..\x64\RelWithDebInfo\wsp3dovm.exe --input-mesh test.1  --write_mesh_vtk 1 --start_vertex 60 --termination_vertex 64
+
+	return 0;
 }

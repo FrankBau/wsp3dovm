@@ -3,12 +3,12 @@ wsp3dovm
 
 Weighted Shortest Path with OpenVolumeMesh (wsp3dovm).
 
-This is a Visual Studio 2013 solution but it should work in newer versions of Visual Studio as well.
+This is a Visual Studio 2019 solution but it should work in newer versions of Visual Studio as well.
 
 wsp3dovm depends on two external libraries:
 
-* Boost (tested with version 1.55)
-* OpenVolumeMesh (tested with snapshot 1.1.0)
+* Boost (tested with version 1.70)
+* OpenVolumeMesh (tested with version 2.0)
 
 These libraries can be installed in separate folders which are parallel to wsp3dovm. 
 This is the easiest way because the wsp3dovm.sln file is already configured for this.
@@ -20,10 +20,8 @@ In the following, the common root folder for all code is C:\Users\Frank\Source
 
 Download and install Boost
 --------------------------
-Download the prebuilt Windows binaries (installer) boost_1_55_0-msvc-12.0-64.exe from http://www.boost.org/
-(12 indicates the Visual Studio version) and install it to a new empty folder, C:\Users\Frank\Source\boost_1_55_0.
-
-(I got internal compiler error with the more recent Boost version 1.60, so lets stick to the tested version.)
+Download the prebuilt Windows binaries (installer) boost_1_70_0-unsupported-msvc-14.2-64.exe from http://www.boost.org/
+(1´4.2 indicates the Visual Studio tools version) and install it to a new empty folder, C:\local\boost_1_70_0.
 
 
 Download, build and install OpenVolumeMesh
