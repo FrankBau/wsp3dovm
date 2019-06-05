@@ -63,23 +63,25 @@ void print_edge_statistics(const Mesh &mesh)
 	std::cout << "min edge length: " << min_lenght << " edge (from,to) vertex: " << mesh.edge(min_eh) << std::endl;
 	std::cout << "max edge length: " << max_lenght << " edge (from,to) vertex: " << mesh.edge(max_eh) << std::endl;
 
-	const int num_bins = 10;
-	int histo[num_bins];
-	for (int bin = 0; bin < num_bins; ++bin)
-		histo[bin] = 0;
+	if (max_lenght > min_lenght) {
+		const int num_bins = 10;
+		int histo[num_bins];
+		for (int bin = 0; bin < num_bins; ++bin)
+			histo[bin] = 0;
 
-	for (auto e_it = mesh.edges_begin(); e_it != mesh.edges_end(); ++e_it)
-	{
-		double lenght = mesh.length(*e_it);
-		int bin = (int)(num_bins * (lenght - min_lenght) / (max_lenght - min_lenght));
-		if (bin == num_bins)
-			--bin;
-		++histo[bin];
-	}
+		for (auto e_it = mesh.edges_begin(); e_it != mesh.edges_end(); ++e_it)
+		{
+			double lenght = mesh.length(*e_it);
+			int bin = (int)(num_bins * (lenght - min_lenght) / (max_lenght - min_lenght));
+			if (bin == num_bins)
+				--bin;
+			++histo[bin];
+		}
 
-	for (int bin = 0; bin < num_bins; ++bin)
-	{
-		std::cout << "edge histogram bin " << bin << " : " << histo[bin] << std::endl;
+		for (int bin = 0; bin < num_bins; ++bin)
+		{
+			std::cout << "edge histogram bin " << bin << " : " << histo[bin] << std::endl;
+		}
 	}
 }
 

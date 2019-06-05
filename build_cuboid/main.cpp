@@ -262,7 +262,8 @@ int main()
 {
 	Mesh mesh;
 	
-	mesh.generate( 4, "D:/Carleton/2019/d3n4/d3n4.poly" );
+	//mesh.generate(4, "D:/Carleton/2019/d3n4/d3n4.poly");
+	mesh.generate(2, "D:/Carleton/2019/d3n2/d3n2.poly");
 
 	// ..\..\tetgen1.5.0\x64\Release\tetgen.exe -pA D:\Carleton\2019\d3n4\d3n4.poly
 	// or: ..\..\tetgen1.5.0\x64\Release\tetgen.exe -pqAV D:\Carleton\2019\d3n4\d3n4.poly
