@@ -109,9 +109,9 @@ const Graph& graph,
 const Mesh& mesh,
 int s_node,
 int t_node,
-bool dump_tree = false,
 bool dump_path = false,
 bool dump_cells = false,
+bool dump_tree = false,
 filesystem::path basename = "out"
 )
 {
@@ -201,229 +201,250 @@ int main(int argc, char** argv)
 {
 	timer<high_resolution_clock> total_time;
 
-	std::cout << "sizeof an int:   " << sizeof(int) << std::endl;
-	std::cout << "sizeof a void*:  " << sizeof(void*) << std::endl;
-	std::cout << "sizeof a Handle: " << sizeof(EdgeHandle) << std::endl;
+	try {
+		std::cout << "sizeof an int:   " << sizeof(int) << std::endl;
+		std::cout << "sizeof a void*:  " << sizeof(void*) << std::endl;
+		std::cout << "sizeof a Handle: " << sizeof(EdgeHandle) << std::endl;
 
-	int start_vertex;		// for single source shortest paths (Dijkstra)
-	int termination_vertex; // an optional termination vertex for which the shortest path will be reported
-	bool write_mesh_vtk;
-	bool write_steiner_graph_vtk;
-	bool use_random_cellweights;
+		int start_vertex;		// for single source shortest paths (Dijkstra)
+		int termination_vertex; // an optional termination vertex for which the shortest path will be reported
+		bool write_mesh_vtk;
+		bool write_steiner_graph_vtk;
+		bool use_random_cellweights;
 
-	int num_random_s_t_vertices; // number of randomly generated s and t vertex pairs
+		int num_random_s_t_vertices; // number of randomly generated s and t vertex pairs
 
-	double stretch;		// spaner graph stretch factor	
-	double yardstick;	// max. size of edge for edge subdivisions
+		double stretch;		// spaner graph stretch factor	
+		double yardstick;	// max. size of edge for edge subdivisions
 
-	program_options::options_description desc("Allowed options");
-	desc.add_options()
-		("help,h", "produce help message")
-		("start_vertex,s", program_options::value<int>(&start_vertex)->default_value(0), "shortest path start vertex number")
-		("termination_vertex,t", program_options::value<int>(&termination_vertex)->default_value(-1), "shortest path termination vertex number (-1==none)")
-		("random_s_t_vertices,r", program_options::value<int>(&num_random_s_t_vertices)->default_value(0), "number of randomly generated s and t vertex pairs")
-		("spanner_stretch,x", program_options::value<double>(&stretch)->default_value(0.0), "spanner graph stretch factor")
-		("yardstick,y", program_options::value<double>(&yardstick)->default_value(0.0), "interval length for interval scheme (0: do not subdivide edges)")
-		("write_mesh_vtk,m", program_options::value<bool>(&write_mesh_vtk)->default_value(false), "write input mesh as .vtk")
-		("write_steiner_graph_vtk,g", program_options::value<bool>(&write_steiner_graph_vtk)->default_value(false), "write steiner graph as .vtk")
-		("use-random-cellweights,u", program_options::value<bool>(&use_random_cellweights)->default_value(false), "generate (pseudo-)random cell weights internally")
-		("input-mesh", program_options::value<std::string>(), "set input filename (tetgen 3D mesh files wo extension)")
-	;
+		program_options::options_description desc("Allowed options");
+		desc.add_options()
+			("help,h", "produce help message")
+			("start_vertex,s", program_options::value<int>(&start_vertex)->default_value(-1), "shortest path start vertex number (-1==none/random)")
+			("termination_vertex,t", program_options::value<int>(&termination_vertex)->default_value(-1), "shortest path termination vertex number (-1==none/random)")
+			("random_s_t_vertices,r", program_options::value<int>(&num_random_s_t_vertices)->default_value(0), "number of randomly generated s and t vertex pairs")
+			("spanner_stretch,x", program_options::value<double>(&stretch)->default_value(0.0), "spanner graph stretch factor")
+			("yardstick,y", program_options::value<double>(&yardstick)->default_value(0.0), "interval length for interval scheme (0: do not subdivide edges)")
+			("write_mesh_vtk,m", program_options::value<bool>(&write_mesh_vtk)->default_value(false), "write input mesh as .vtk")
+			("write_steiner_graph_vtk,g", program_options::value<bool>(&write_steiner_graph_vtk)->default_value(false), "write steiner graph as .vtk")
+			("use-random-cellweights,u", program_options::value<bool>(&use_random_cellweights)->default_value(false), "generate (pseudo-)random cell weights internally")
+			("input-mesh", program_options::value<std::string>(), "set input filename (tetgen 3D mesh files wo extension)")
+			;
 
-	program_options::positional_options_description positional_options;
-	positional_options.add("input-mesh", 1);
+		program_options::positional_options_description positional_options;
+		positional_options.add("input-mesh", 1);
 
-	program_options::variables_map vm;
-	try
-	{
-		program_options::store(
-			program_options::command_line_parser(argc, argv).options(desc).positional(positional_options).run(), 
-			vm
-		);
-	} 
-	catch (...)
-	{
-		// exceptions in cmd line parsing are aweful, but hapenned easily
-		std::cerr << "exception while parsing command line, exit." << std::endl;
-		std::cerr << desc << endl;
-		return EXIT_FAILURE;
-	}
-
-	program_options::notify(vm);
-
-	if (vm.count("help")) {
-		std::cout << desc << endl;
-		return EXIT_FAILURE;
-	}
-
-	if (vm.count("input-mesh"))
-	{
-		cout << "Input mesh: " << vm["input-mesh"].as<string>() << endl;
-	}
-	else
-	{
-		cout << "no input-mesh specified, exit." << endl;
-		std::cout << desc << endl;
-		return EXIT_FAILURE;
-	}
-
-	boost::filesystem::path inputfilename(vm["input-mesh"].as<string>());
-
-	Mesh mesh;
-
-	timer<high_resolution_clock> t;
-	read_tet(mesh, inputfilename.string() );
-	std::cout << "read_tet [s]: " << t.seconds() << std::endl;
-
-	// cell weight are initialized from tet file, weight 1.0 is used when no specific weights are present
-	if (use_random_cellweights)
-	{
-		set_random_cell_weights(mesh);
-	}
-	calc_face_weights(mesh);
-	calc_edge_weights(mesh);
-
-	mesh.print_memory_statistics();
-	print_mesh_statistics(mesh);
-
-	if(write_mesh_vtk)
-	{
-		timer<high_resolution_clock> t;
-		write_vtk(mesh, inputfilename.filename().replace_extension(".vtk").string() );
-		std::cout << "write_vtk [s]: " << t.seconds() << std::endl;
-	}
-	
-	Graph graph;
-
-	{
-		timer<high_resolution_clock> t;
-		
-		//create_barycentric_steiner_points(graph, mesh);
-		//std::cout << "create_barycentric_steiner_points: " << t.seconds() << " s" << std::endl;
-
-		if (stretch < 0.0)
+		program_options::variables_map vm;
+		try
 		{
-			create_surface_steiner_points(graph, mesh);
-			std::cout << "create_surface_steiner_points [s]: " << t.seconds() <<std::endl;
+			program_options::store(
+				program_options::command_line_parser(argc, argv).options(desc).positional(positional_options).run(),
+				vm
+			);
+		}
+		catch (...)
+		{
+			// exceptions in cmd line parsing are aweful, but happen easily
+			std::cerr << "exception while parsing command line, exit." << std::endl;
+			std::cerr << desc << endl;
+			return EXIT_FAILURE;
+		}
+
+		program_options::notify(vm);
+
+		if (vm.count("help")) {
+			std::cout << desc << endl;
+			return EXIT_FAILURE;
+		}
+
+		if (vm.count("input-mesh"))
+		{
+			cout << "Input mesh: " << vm["input-mesh"].as<string>() << endl;
 		}
 		else
 		{
-			std::cout << "create_steiner_graph_improved_spanner with stretch " << stretch << " and interval " << yardstick << std::endl;
-			create_steiner_graph_improved_spanner(graph, mesh, stretch, yardstick );
-			std::cout << "create_steiner_graph_improved_spanner [s]: " << t.seconds() << std::endl;
+			cout << "no input-mesh specified, exit." << endl;
+			std::cout << desc << endl;
+			return EXIT_FAILURE;
 		}
-	}
-	
-	print_steiner_point_statistics(mesh);
 
-	std::cout << "graph nodes: " << graph.m_vertices.size() << std::endl;
-	std::cout << "graph edges: " << graph.m_edges.size() << std::endl;
+		boost::filesystem::path inputfilename(vm["input-mesh"].as<string>());
 
-	if(write_steiner_graph_vtk)
-	{
-		timer<high_resolution_clock> t;
-		write_graph_vtk(graph, inputfilename.filename().replace_extension("_steiner_graph.vtk").string());
-		std::cout << "write_steiner_graph_vtk [s]: " << t.seconds() << std::endl;
-	}
-
-	if (start_vertex >= 0 && termination_vertex >= 0)
-	{
-		std::cout << "running single dijkstra for s=" << start_vertex << " and t=" << termination_vertex << std::endl;
-		
-		timer<high_resolution_clock> t;
-
-		double approx_ratio = run_single_dijkstra(graph, mesh, start_vertex, termination_vertex, true, true, true, inputfilename.filename());
-
-		std::cout << "total time [s] for " << 1 << " dijkstra_shortest_paths: " << t.seconds() << std::endl;
-
-		std::cout << "shortest path approximation ratio: " << approx_ratio << std::endl;
-	}
-
-	if (num_random_s_t_vertices > 0)
-	{
-		std::cout << "running " << num_random_s_t_vertices << " dijkstra for random vertex pairs" << std::endl;
-
-		std::mt19937 generator;
-		// we take only original mesh vertices into account such that computations for different stener graphs keep comparable
-		std::uniform_int_distribution<> random_value(0, mesh.n_vertices() - 1); // closed interval (including max) 
-
-		double min_approx_ratio = std::numeric_limits<double>::max();
-		int min_s;
-		int min_t;
-		double max_approx_ratio = std::numeric_limits<double>::min();
-		int max_s;
-		int max_t;
-		double sum_approx_ratio = 0;
+		Mesh mesh;
 
 		timer<high_resolution_clock> t;
+		read_tet(mesh, inputfilename.string());
+		std::cout << "read_tet [s]: " << t.seconds() << std::endl;
 
-		// create histogram with 10 bins in range 100% .. 110%
-		const int num_bins = 10;
-		double histo_min = 1.0;
-		double histo_max = 1.1;
-		double histo[num_bins];
-		std::fill(begin(histo), end(histo), 0);
-
-		distance_stream.open( "distances.csv", fstream::out | fstream::app);
-		distance_stream << stretch << ", " << yardstick << ", " << graph.m_vertices.size() << ", " << graph.m_edges.size() << ", ";
-
-		for (int i = 0; i < num_random_s_t_vertices; ++i)
+		// cell weight are initialized from tet file, weight 1.0 is used when no specific weights are present
+		if (use_random_cellweights)
 		{
-			int s = random_value(generator);
-			int t = random_value(generator);
-
-			while (s==t) // for s==t, the approx. ratio cannot be calculated
-				t = random_value(generator);
-
-			double approx_ratio = run_single_dijkstra(graph, mesh, s, t );
-
-			int bin = (int)(num_bins * (approx_ratio - histo_min) / (histo_max - histo_min));
-			if (bin < 0)
-			{
-				std::cerr << "ERROR: Dijkstra (" << s << "," << t << ") produced shorter path than Euclid would allow." << std::endl;
-			}
-			if (bin >= num_bins)
-			{
-				bin = num_bins - 1;
-			}
-			++histo[bin];
-
-			if (approx_ratio < min_approx_ratio)
-			{
-				min_approx_ratio = approx_ratio;
-				min_s = s;
-				min_t = t;
-			}
-
-			if (approx_ratio > max_approx_ratio)
-			{
-				max_approx_ratio = approx_ratio;
-				max_s = s;
-				max_t = t;
-			}
-
-			sum_approx_ratio += approx_ratio;
+			set_random_cell_weights(mesh);
 		}
+		calc_face_weights(mesh);
+		calc_edge_weights(mesh);
 
-		distance_stream << "\n";
-		distance_stream.close();
+		mesh.print_memory_statistics();
+		print_mesh_statistics(mesh);
 
-		double avg_approx_ratio = sum_approx_ratio / num_random_s_t_vertices;
-
-		std::cout << "total time [s] for " << num_random_s_t_vertices << " dijkstra_shortest_paths: " << t.seconds() << std::endl;
-		std::cout << "min shortest path approximation ratio: " << min_approx_ratio << " s=" << min_s << " , t=" << min_t << std::endl;
-		std::cout << "avg shortest path approximation ratio: " << avg_approx_ratio << std::endl;
-		std::cout << "max shortest path approximation ratio: " << max_approx_ratio << " s=" << max_s << " , t=" << max_t << std::endl;
-
-		for (int bin = 0; bin < num_bins; ++bin)
+		if (write_mesh_vtk)
 		{
-			std::cout << "approx. ratio histo: " << histo_min + bin * ((histo_max - histo_min) / num_bins) << " : " << histo[bin] << std::endl;
+			timer<high_resolution_clock> t;
+			write_vtk(mesh, inputfilename.filename().replace_extension(".vtk").string());
+			std::cout << "write_vtk [s]: " << t.seconds() << std::endl;
 		}
-	}
-	
-	// write_graph_dot("graph.dot", graph);
 
-	std::cout << "This is the end, total time [s]: " << total_time.seconds() << std::endl;
+		Graph graph;
+
+		{
+			timer<high_resolution_clock> t;
+
+			//create_barycentric_steiner_points(graph, mesh);
+			//std::cout << "create_barycentric_steiner_points: " << t.seconds() << " s" << std::endl;
+
+			if (stretch < 0.0)
+			{
+				create_surface_steiner_points(graph, mesh);
+				std::cout << "create_surface_steiner_points [s]: " << t.seconds() << std::endl;
+			}
+			else
+			{
+				std::cout << "create_steiner_graph_improved_spanner with stretch " << stretch << " and interval " << yardstick << std::endl;
+				create_steiner_graph_improved_spanner(graph, mesh, stretch, yardstick);
+				std::cout << "create_steiner_graph_improved_spanner [s]: " << t.seconds() << std::endl;
+			}
+		}
+
+		print_steiner_point_statistics(mesh);
+
+		std::cout << "graph nodes: " << graph.m_vertices.size() << std::endl;
+		std::cout << "graph edges: " << graph.m_edges.size() << std::endl;
+
+		if (write_steiner_graph_vtk)
+		{
+			timer<high_resolution_clock> t;
+			write_graph_vtk(graph, inputfilename.filename().replace_extension("_steiner_graph.vtk").string());
+			std::cout << "write_steiner_graph_vtk [s]: " << t.seconds() << std::endl;
+		}
+
+		if (start_vertex >= 0 && termination_vertex >= 0)
+		{
+			std::cout << "running single dijkstra for s=" << start_vertex << " and t=" << termination_vertex << std::endl;
+
+			timer<high_resolution_clock> t;
+
+			double approx_ratio = run_single_dijkstra(graph, mesh, start_vertex, termination_vertex, true, true, true, inputfilename.filename());
+
+			std::cout << "total time [s] for " << 1 << " dijkstra_shortest_paths: " << t.seconds() << std::endl;
+
+			std::cout << "shortest path approximation ratio: " << approx_ratio << std::endl;
+		}
+
+		if (num_random_s_t_vertices > 0)
+		{
+			std::cout << "running " << num_random_s_t_vertices << " dijkstra for random vertex pairs" << std::endl;
+
+			std::mt19937 generator;
+			// we take only original mesh vertices into account such that computations for different steiner graphs keep comparable
+			std::uniform_int_distribution<> random_value(0, mesh.n_vertices() - 1); // closed interval (including max) 
+
+			double min_approx_ratio = std::numeric_limits<double>::max();
+			int min_s;
+			int min_t;
+			double max_approx_ratio = std::numeric_limits<double>::min();
+			int max_s;
+			int max_t;
+			double sum_approx_ratio = 0;
+
+			timer<high_resolution_clock> t;
+
+			// create histogram with 10 bins in range 100% .. 110%
+			const int num_bins = 10;
+			double histo_min = 1.0;
+			double histo_max = 1.1;
+			double histo[num_bins];
+			std::fill(begin(histo), end(histo), 0);
+
+			distance_stream.open("distances.csv", fstream::out | fstream::app);
+			distance_stream << stretch << ", " << yardstick << ", " << graph.m_vertices.size() << ", " << graph.m_edges.size() << ", ";
+
+			for (int i = 0; i < num_random_s_t_vertices; ++i)
+			{
+				int s; 
+				int t;
+				
+				do {
+					if (start_vertex < 0)
+						s = random_value(generator);
+					else
+						s = start_vertex;
+
+					if (termination_vertex < 0)
+						t = random_value(generator);
+					else
+						t = termination_vertex;
+				} while (s == t);
+				
+				double approx_ratio = run_single_dijkstra(graph, mesh, s, t, true, false, false, inputfilename.filename() );
+
+				int bin = (int)(num_bins * (approx_ratio - histo_min) / (histo_max - histo_min));
+				if (bin < 0)
+				{
+					std::cerr << "ERROR: Dijkstra (" << s << "," << t << ") produced shorter path than Euclid would allow." << std::endl;
+				}
+				if (bin >= num_bins)
+				{
+					bin = num_bins - 1;
+				}
+				++histo[bin];
+
+				if (approx_ratio < min_approx_ratio)
+				{
+					min_approx_ratio = approx_ratio;
+					min_s = s;
+					min_t = t;
+				}
+
+				if (approx_ratio > max_approx_ratio)
+				{
+					max_approx_ratio = approx_ratio;
+					max_s = s;
+					max_t = t;
+				}
+
+				sum_approx_ratio += approx_ratio;
+			}
+
+			distance_stream << "\n";
+			distance_stream.close();
+
+			double avg_approx_ratio = sum_approx_ratio / num_random_s_t_vertices;
+
+			std::cout << "total time [s] for " << num_random_s_t_vertices << " dijkstra_shortest_paths: " << t.seconds() << std::endl;
+			std::cout << "min shortest path approximation ratio: " << min_approx_ratio << " s=" << min_s << " , t=" << min_t << std::endl;
+			std::cout << "avg shortest path approximation ratio: " << avg_approx_ratio << std::endl;
+			std::cout << "max shortest path approximation ratio: " << max_approx_ratio << " s=" << max_s << " , t=" << max_t << std::endl;
+
+			for (int bin = 0; bin < num_bins; ++bin)
+			{
+				std::cout << "approx. ratio histo: " << histo_min + bin * ((histo_max - histo_min) / num_bins) << " : " << histo[bin] << std::endl;
+			}
+		}
+
+		// write_graph_dot("graph.dot", graph);
+
+		std::cout << "This is the end. Total time [s]: " << total_time.seconds() << std::endl;
+		// save the time used for d'tor
+		_Exit(EXIT_SUCCESS); // Terminates the process normally by returning control to the host environment, but without performing any of the regular cleanup tasks for terminating processes (as function exit does).
+
+	}
+	catch (const std::exception& e) {
+		std::cerr << "exception happened: " << e.what() << ", exit." << endl; 
+	}
+	catch (...)
+	{
+		std::cerr << "unknown exception happened, exit." << endl;
+	}
 
 	return EXIT_SUCCESS;
 }

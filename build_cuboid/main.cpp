@@ -43,6 +43,7 @@ typedef double Weight;
 
 const Weight max_weight = std::numeric_limits<double>::max();
 
+using namespace std;
 using namespace OpenVolumeMesh;
 using namespace OpenVolumeMesh::Geometry;
 
@@ -174,14 +175,49 @@ struct Mesh : GeometricHexahedralMeshV3f
 		return OpenVolumeMesh::GeometricHexahedralMeshV3f::add_vertex(point);
 	}
 
-	// x increases left -> right
-	// y increases top -> bottom
-	// z increases into the screen (front --> rear)
-	void add_cuboid(int x, int y, int z, int dx, int dy, int dz, float weight=1.0 )
+	// a unit size cube 
+	void add_cube(int x, int y, int z, int weight )
 	{
-		if (dx < 0) { x += dx; dx = -dx; }
-		if (dy < 0) { y += dy; dy = -dy; }
-		if (dz < 0) { z += dz; dz = -dz; }
+#if 0
+		// shortcut because we know where a wsp will run!
+		// dont add red+green cubes which are too far away from center
+		if (z < 2048 - 6)
+			return;
+		if (z > 2048 + 6)
+			return;
+
+		// shortcut because we know where a wsp will run!
+		// dont add red+green cubes which are too far away from wsp
+		if(weight>=4) {
+
+			int near = z % 1024;
+			
+			if (near >= 512)		// make mod signed
+				near -= 1024;
+
+			if (near < 0)			// abs diff to 0
+				near = -near;
+
+			if (near > 10)			// not close enough
+				return;
+				;
+		}
+#endif
+
+
+#if 1
+// build only the front face "d2n4"
+		if (z != 0)
+			return;
+		if (y < 0)
+			return; 
+		if (y > 63) // for n==4
+			return;
+#endif
+
+		const int dx = 1;
+		const int dy = 1;
+		const int dz = 1;
 
 		VertexHandle ltf = add_vertex(Vec3f(x, y, z));
 		VertexHandle ltr = add_vertex(Vec3f(x, y, z + dz));
@@ -192,58 +228,109 @@ struct Mesh : GeometricHexahedralMeshV3f
 		VertexHandle rbf = add_vertex(Vec3f(x + dx, y + dy, z));
 		VertexHandle rbr = add_vertex(Vec3f(x + dx, y + dy, z + dz));
 
-		auto ch = add_cell({
-			{ lbf, rbf, rtf, ltf, lbr, ltr, rtr, rbr }
-		}, true );
+		// set last param to true for (slow!) topology check after each insertion
+		auto ch = add_cell( {{ lbf, rbf, rtf, ltf, lbr, ltr, rtr, rbr } }, false );
 		if (ch == InvalidCellHandle) {
-			cerr << "failed to create cuboid, exit." << endl;
+			cerr << "failed to create cube at (" << x << ", " << y << ", "  << z << ") exit." << endl;
 			exit(-1);
 		}
 		this->weight[ch] = weight;
 	}
 
+	// x increases left -> right
+	// y increases top -> bottom
+	// z increases into the screen (front --> rear)
+	void add_cuboid(int x, int y, int z, int dx, int dy, int dz, int weight )
+	{
+		if (dx < 0) { x += dx; dx = -dx; }
+		if (dy < 0) { y += dy; dy = -dy; }
+		if (dz < 0) { z += dz; dz = -dz; }
+
+#if 1
+		// add a full set of unit size cubes (slow, for wsp search)
+		for (int xx = x; xx < x + dx; ++xx)
+			for (int yy = y; yy < y + dy; ++yy)
+				for (int zz = z; zz < z + dz; ++zz)
+					add_cube( xx, yy, zz, weight);
+#else
+		// add the whole cuboid at once (faster, for rendering)
+		VertexHandle ltf = add_vertex(Vec3f(x, y, z));
+		VertexHandle ltr = add_vertex(Vec3f(x, y, z + dz));
+		VertexHandle lbf = add_vertex(Vec3f(x, y + dy, z));
+		VertexHandle lbr = add_vertex(Vec3f(x, y + dy, z + dz));
+		VertexHandle rtf = add_vertex(Vec3f(x + dx, y, z));
+		VertexHandle rtr = add_vertex(Vec3f(x + dx, y, z + dz));
+		VertexHandle rbf = add_vertex(Vec3f(x + dx, y + dy, z));
+		VertexHandle rbr = add_vertex(Vec3f(x + dx, y + dy, z + dz));
+
+		// set last param to true for (slow!) topology check after each insertion
+		auto ch = add_cell({ { lbf, rbf, rtf, ltf, lbr, ltr, rtr, rbr } }, false);
+		if (ch == InvalidCellHandle) {
+			cerr << "failed to create cuboid at (" << x << ", " << y << ", " << z << ") exit." << endl;
+			exit(-1);
+		}
+		this->weight[ch] = weight;
+#endif
+	}
+
 	void generate(int n, string filename)
 	{
-		const int wx = 1;
-		const int wy = 4 * n;
-		const int wz = 4 * 4 * wy * n;
+		const int wx = 16;
+		const int wx1 = 15; 
+		const int wy = wx/4;
+		const int wz = wy/4;
+
+		const int lx = 1*(wx/wx);
+		const int ly = n*lx*(wx/wy);
+		const int lz = n*ly*(wx/wz);
 
 		// weight=16: center
-		// these are n large slabs of height 1 and weight 1
+		// these are n vertical slabs of height 1 and weight 1
 		// they are only partitioned into smaller parts to match satellite cuboid sizes
 		for (int i = 0; i < n; ++i) {
 			for (int j = 0; j < n; ++j) {
 				for (int k = 0; k < n; ++k) {
-					add_cuboid(i * wx, j * wy, k * wz, wx, wy, wz, 16);
+					if ((i % 2) == 0) {
+						add_cuboid(i * lx, j * ly, k * lz, lx, ly, lz, wx);
+					}
+					else {
+						// little less weight (epsilon)
+						add_cuboid(i * lx, j * ly, k * lz, lx, ly, lz, wx1);
+					}
 				}
 			}
 		}
 
-		// weight=4: top-right and bottom-left
+		// weight=4: green satellites of rank 2
 		for (int j = 0; j < n; ++j) {
+
+			// the full length is divided only for technical reasons into n parts
 			for (int k = 0; k < n; ++k) {
-				if (j % 2) {
-					add_cuboid( n, j * wy, k * wz,    +1, wy, wz,    4);
+				if ( (j % 2)==1 ) {
+					add_cuboid(0 * lx, j * ly, k * lz, -1, ly, lz, wy);
 				}
 				else {
-					add_cuboid( 0, j * wy, k * wz,    -1, wy, wz,    4);
+					add_cuboid(n * lx, j * ly, k * lz, +1, ly, lz, wy);
 				}
 			}
 		}
 
-		for (int i = 0; i < n; ++i) {
+		// weight=1: blue satellites of rank 3
+		for (int i = 0; i < n; ++i) {		// the full x-width is divided only for technical reasons into n parts
 			for (int k = 0; k < n; ++k) {
-				if (k % 2) {
-					add_cuboid(i * wx, n * wy, k * wz, wx, 1, wz, 1);
+
+				// the shims of thickness 1
+				add_cuboid(i * lx, 0 * ly, k * lz, +1, -1, lz, wx);
+				add_cuboid(i * lx, n * ly, k * lz, +1, +1, lz, wx);
+
+				if ((k % 2) == 1) {
+					add_cuboid(i * lx, 0 * ly - 1, k * lz, +1, -1, lz, wz); // y: -1 for shim
 				}
 				else {
-					add_cuboid(i * wx,      0, k * wz, wx, -1, wz, 1);
+					add_cuboid(i * lx, n * ly + 1, k * lz, +1, +1, lz, wz); // y: +1 for shim
 				}
 			}
 		}
-
-		// weight=1: front-left and rear-right
-
 		cout << " n_cells=" << n_cells();
 		cout << " n_faces=" << n_faces();
 		cout << " n_edges=" << n_edges();
@@ -254,7 +341,6 @@ struct Mesh : GeometricHexahedralMeshV3f
 		write_poly(filename);
 	}
 
-
 };
 
 
@@ -262,8 +348,10 @@ int main()
 {
 	Mesh mesh;
 	
-	//mesh.generate(4, "D:/Carleton/2019/d3n4/d3n4.poly");
-	mesh.generate(2, "D:/Carleton/2019/d3n2/d3n2.poly");
+	//mesh.enable_bottom_up_incidences(false);
+	//mesh.generate(6, "D:/Carleton/2019/d3n6/d3n6.poly");
+	mesh.generate(4, "D:/Carleton/2019/d2n4/d2n4.poly");
+	//mesh.generate(2, "D:/Carleton/2019/d3n2/d3n2.poly");
 
 	// ..\..\tetgen1.5.0\x64\Release\tetgen.exe -pA D:\Carleton\2019\d3n4\d3n4.poly
 	// or: ..\..\tetgen1.5.0\x64\Release\tetgen.exe -pqAV D:\Carleton\2019\d3n4\d3n4.poly

@@ -580,10 +580,15 @@ void create_steiner_graph_improved_spanner(Graph &graph, Mesh &mesh, double stre
 	if (stretch == 0)
 	{	// no stretch allowed, build complete graph (faster)
 
-		std::cout << "adding graph edges (complete subgraphs)" << std::endl;
+		std::cout << "adding graph edges (complete subgraphs) for " <<mesh.n_cells()  << " cells" << std::endl;
 
+		int c = 0;
 		for (auto it = mesh.cells_begin(); it != mesh.cells_end(); ++it)
 		{
+			c++;
+			if ((c % 100) == 0)
+				std::cout << "\r" << c << " cells processed";
+
 			CellHandle ch = *it;
 			std::vector<GraphNode_descriptor> nodes = cell_nodes(graph, mesh, ch);
 
@@ -598,10 +603,15 @@ void create_steiner_graph_improved_spanner(Graph &graph, Mesh &mesh, double stre
 		return;
 	}
 
-	std::cout << "adding graph edges (spanner subgraphs)" << std::endl;
-
+	std::cout << "adding graph edges (spanner subgraphs) for " <<mesh.n_cells()  << " cells" << std::endl;
+	
+	int c = 0;
 	for (auto it = mesh.cells_begin(); it != mesh.cells_end(); ++it)
 	{
+		c++;
+		if ((c % 100) == 0)
+			std::cout << "\r" << c << " cells processed";
+
 		CellHandle ch = *it;
 
 		std::vector<GraphNode_descriptor> nodes = cell_nodes(graph, mesh, ch);
